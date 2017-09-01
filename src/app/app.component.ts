@@ -12,7 +12,6 @@ export class AppComponent {
   private dymoGen: DymoGenerator;
   private exprGen: ExpressionGenerator;
   private manager: DymoManager;
-  private isPlaying = false;
 
   constructor() {
     this.dymoGen = new DymoGenerator();
@@ -23,19 +22,26 @@ export class AppComponent {
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
     const url = URL.createObjectURL(acceptedFile.file);
     console.warn(url);
+
+    
+
     const newDymoUri = this.dymoGen.addDymo(null, url);
-    let rampUri = this.dymoGen.addControl(null, uris.RANDOM);
-    this.exprGen.addConstraint(newDymoUri, `
+
+    //scheduleGen.generateTransition(uris.IMMEDIATE, newDymoUri)
+    //scheduleGen.generateTransition(uris.CROSSFADE, newDymoUri)
+    //scheduleGen.generateTransition(uris.BEATMATCH, newDymoUri)
+    //IF NOTHING PLAYING YET, SIMPLY ADD, ELSE MAKE TRANSITION
+
+    const rampUri = this.dymoGen.addControl(null, uris.BROWNIAN);
+    const constraintUri = this.exprGen.addConstraint(newDymoUri, `
       ∀ d in ["`+newDymoUri+`"]
       => ∀ c in ["`+rampUri+`"]
       => Amplitude(d) == c
     `);
-    this.manager.reloadFromStore()
+    //this.scheduleGen
+    this.manager.loadFromStore(newDymoUri, rampUri, constraintUri)
       .then(() => {
-        if (!this.isPlaying) {
-          this.manager.startPlaying();
-          this.isPlaying = true;
-        }
+        this.manager.startPlaying();
       });
   }
 }
