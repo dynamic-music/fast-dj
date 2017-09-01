@@ -1,7 +1,10 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
-import { Ng2FileDropModule }  from 'ng2-file-drop';
+import { Ng2FileDropModule } from 'ng2-file-drop';
+import {
+  FeatureExtractionService
+} from './services/feature-extraction/feature-extraction.service';
 
 @NgModule({
   declarations: [
@@ -11,7 +14,9 @@ import { Ng2FileDropModule }  from 'ng2-file-drop';
     BrowserModule,
     Ng2FileDropModule
   ],
-  providers: [],
+  providers: [
+    FeatureExtractionService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {}
