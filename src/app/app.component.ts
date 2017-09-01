@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import {Ng2FileDropAcceptedFile} from 'ng2-file-drop';
 import { DymoGenerator, ExpressionGenerator, DymoManager, uris } from 'dymo-core';
+import {
+  FeatureExtractionService
+} from './services/feature-extraction/feature-extraction.service';
 
 @Component({
   selector: 'app-root',
@@ -13,8 +16,8 @@ export class AppComponent {
   private exprGen: ExpressionGenerator;
   private manager: DymoManager;
 
-  constructor() {
-    this.dymoGen = new DymoGenerator();
+  constructor(private extractionService: FeatureExtractionService) {
+    this.dymoGen = new DymoGenerator('https://semantic-player.github.io/dymo-core/ontologies/');
     this.exprGen = new ExpressionGenerator(this.dymoGen.getManager().getStore());
     this.manager = this.dymoGen.getManager();
   }
@@ -22,6 +25,16 @@ export class AppComponent {
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
     const url = URL.createObjectURL(acceptedFile.file);
     console.warn(url);
+    console.time('Audio');
+    this.manager.getAudioBank().getBuffer(url).then(buffer => {
+      console.timeEnd('Audio');
+      console.warn(buffer);
+      console.time('Beats');
+      return this.extractionService.extractBeats(buffer);
+    }).then(beats => {
+      console.timeEnd('Beats');
+      console.warn(beats);
+    });
 
     
 
