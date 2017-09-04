@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Component } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
 import { DymoGenerator, DymoTemplates, MixGenerator, DymoManager, GlobalVars, uris } from 'dymo-core';
@@ -16,6 +17,7 @@ export class AppComponent {
   private mixGen: MixGenerator;
   private manager: DymoManager;
   private isPlaying = false;
+  private previousDymos = [];
 
   constructor(private extractionService: FeatureExtractionService) {
     GlobalVars.LOGGING_ON = true;
@@ -25,7 +27,14 @@ export class AppComponent {
         let store = this.manager.getStore();
         this.dymoGen = new DymoGenerator(store);
         this.mixGen = new MixGenerator(this.dymoGen);
-      })
+      });
+    this.manager.getPlayingDymoUris()
+      .subscribe(updatedDymos => {
+        if (_.difference(updatedDymos, this.previousDymos).length > 0) {
+          console.log(updatedDymos);
+        }
+        this.previousDymos = updatedDymos;
+      });
   }
 
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
