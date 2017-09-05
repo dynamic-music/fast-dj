@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import { Component } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
-import { DymoGenerator, DymoTemplates, MixGenerator, DymoManager, GlobalVars, uris } from 'dymo-core';
+import { DymoGenerator, DymoTemplates, DymoManager, GlobalVars, uris } from 'dymo-core';
+import { MixGenerator } from './mix/mix-generator';
 import {
   FeatureExtractionService
 } from './services/feature-extraction/feature-extraction.service';
@@ -26,12 +27,13 @@ export class AppComponent {
       .then(() => {
         let store = this.manager.getStore();
         this.dymoGen = new DymoGenerator(store);
-        this.mixGen = new MixGenerator(this.dymoGen);
+        this.mixGen = new MixGenerator(this.dymoGen, this.manager);
       });
     this.manager.getPlayingDymoUris()
       .subscribe(updatedDymos => {
         if (_.difference(updatedDymos, this.previousDymos).length > 0) {
           console.log(updatedDymos);
+          console.log(this.manager.getNavigatorPosition(this.mixGen.getMixDymo(), 0))
         }
         this.previousDymos = updatedDymos;
       });
@@ -43,7 +45,7 @@ export class AppComponent {
       .then(buffer => this.extractionService.extractBeats(buffer))
       .then(beats => DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, url, beats))
       .then(newDymo => this.manager.loadFromStore(newDymo)
-        .then(() => this.mixGen.transitionToSong(newDymo, 1)))
+        .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo, 2)))
       .then(mixDymo => this.keepOnPlaying(mixDymo));
   }
 
