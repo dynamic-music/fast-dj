@@ -34,6 +34,8 @@ export class MixGenerator {
     let currentPosition = this.manager.getNavigatorPosition(this.mixDymoUri, 1);
     console.log(currentPosition)
 
+    let ramp = this.generator.addControl('', uris.RAMP);
+
     let removedParts;
 
     if (currentPosition) {
@@ -44,16 +46,16 @@ export class MixGenerator {
         this.generator.getStore().addPart(currentTransitionPart, removedParts[i]);
         this.generator.getStore().addPart(currentTransitionPart, newSongParts[i]);
       });
+
+      this.expressionGen.addConstraint(this.mixDymoUri,
+        '∀ d in '+JSON.stringify(removedParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == 1-r');
     }
 
     newSongParts.slice(duration).forEach(p => this.generator.getStore().addPart(this.mixDymoUri, p));
 
-    let ramp = this.generator.addControl('', uris.RAMP);
+    console.log('∀ d in '+JSON.stringify(newSongParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == 1-r')
 
-    this.expressionGen.addConstraint(this.mixDymoUri,
-      '∀ d in '+JSON.stringify(removedParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == 1-r');
-
-    this.expressionGen.addConstraint(this.mixDymoUri,
+    var constraint = this.expressionGen.addConstraint(this.mixDymoUri,
       '∀ d in '+JSON.stringify(newSongParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == r');
 
     //TODO LOAD CONSTRAINTS
