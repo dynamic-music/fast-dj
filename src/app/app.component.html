@@ -4,4 +4,8 @@
   class="custom-component-drop-zone"
   (ng2FileDropFileAccepted)="dragFileAccepted($event)"
 >
+  <div
+  [ngClass]="{beat: currentStyle.isBeat, 'status-indicator': true}"
+  [style.backgroundColor]="currentStyle.colour"
+  ></div>
 </div>

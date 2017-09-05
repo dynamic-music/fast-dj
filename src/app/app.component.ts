@@ -7,6 +7,19 @@ import {
   FeatureExtractionService
 } from './services/feature-extraction/feature-extraction.service';
 
+function* createColourCycleIterator(colours) {
+  let index = 0;
+  const nColours = colours.length;
+  while (true) {
+    yield colours[index = ++index % nColours];
+  }
+}
+
+interface IndicatorStyle {
+  isBeat: boolean;
+  colour: string;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -19,9 +32,22 @@ export class AppComponent {
   private manager: DymoManager;
   private isPlaying = false;
   private previousDymos = [];
+  private currentStyle: IndicatorStyle;
+  private cyclicColours: Iterator<string>;
 
   constructor(private extractionService: FeatureExtractionService) {
     GlobalVars.LOGGING_ON = true;
+    this.cyclicColours = createColourCycleIterator([
+      '#5bc0eb',
+      '#fde74c',
+      '#9bc53d',
+      '#e55934',
+      '#fa7921'
+    ]);
+    this.currentStyle = {
+      isBeat: false,
+      colour: this.getNextColour()
+    };
     this.manager = new DymoManager();
     this.manager.init('https://semantic-player.github.io/dymo-core/ontologies/')
       .then(() => {
@@ -31,9 +57,26 @@ export class AppComponent {
       });
     this.manager.getPlayingDymoUris()
       .subscribe(updatedDymos => {
-        if (_.difference(updatedDymos, this.previousDymos).length > 0) {
-          console.log(updatedDymos);
-          console.log(this.manager.getNavigatorPosition(this.mixGen.getMixDymo(), 0))
+        const nChanged = _.difference(updatedDymos, this.previousDymos).length;
+        if (nChanged > 0) {
+          const trackChanged = nChanged === this.previousDymos.length;
+          if (trackChanged) {
+            // TODO identify which track is playing, and associate with a specific colour
+            this.currentStyle = {
+              colour: this.getNextColour(),
+              isBeat: true
+            };
+          } else {
+            this.currentStyle = {
+              ...this.currentStyle,
+              isBeat: true
+            };
+          }
+        } else {
+          this.currentStyle = {
+            ...this.currentStyle,
+            isBeat: false
+          };
         }
         this.previousDymos = updatedDymos;
       });
@@ -58,4 +101,7 @@ export class AppComponent {
     }
   }
 
+  private getNextColour(): string {
+    return this.cyclicColours.next().value;
+  }
 }
