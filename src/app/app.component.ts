@@ -57,6 +57,7 @@ export class AppComponent {
       });
     this.manager.getPlayingDymoUris()
       .subscribe(updatedDymos => {
+         // TODO identify which track is playing, and associate with a specific colour
         const nChanged = _.difference(updatedDymos, this.previousDymos).length;
         if (nChanged > 0) {
           const trackChanged = nChanged === this.previousDymos.length;
