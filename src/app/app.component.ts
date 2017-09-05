@@ -44,8 +44,10 @@ export class AppComponent {
     this.manager.getAudioBank().loadBuffer(url)
       .then(buffer => this.extractionService.extractBeats(buffer))
       .then(beats => DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, url, beats))
-      .then(newDymo => this.manager.loadFromStore(newDymo)
-        .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo, 2)))
+      .then(newDymo => this.manager.loadFromStore(
+          newDymo
+        ).then(() => this.mixGen.transitionImmediatelyToRandomBars(newDymo, 2))
+      )
       .then(mixDymo => this.keepOnPlaying(mixDymo));
   }
 
