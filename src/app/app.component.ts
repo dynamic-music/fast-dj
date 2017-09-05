@@ -29,7 +29,7 @@ export class AppComponent {
   title = 'app';
   private dymoGen: DymoGenerator;
   private mixGen: MixGenerator;
-  private manager: DymoManager;
+  private manager: DymoManager; 
   private isPlaying = false;
   private previousDymos = [];
   private currentStyle: IndicatorStyle;
@@ -60,18 +60,12 @@ export class AppComponent {
         const nChanged = _.difference(updatedDymos, this.previousDymos).length;
         if (nChanged > 0) {
           const trackChanged = nChanged === this.previousDymos.length;
-          if (trackChanged) {
-            // TODO identify which track is playing, and associate with a specific colour
+          const colour = trackChanged ? 
+            this.getNextColour() : this.currentStyle.colour;
             this.currentStyle = {
-              colour: this.getNextColour(),
+              colour,
               isBeat: true
             };
-          } else {
-            this.currentStyle = {
-              ...this.currentStyle,
-              isBeat: true
-            };
-          }
         } else {
           this.currentStyle = {
             ...this.currentStyle,
