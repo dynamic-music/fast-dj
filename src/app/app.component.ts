@@ -24,7 +24,7 @@ export class AppComponent {
 
   constructor(private extractionService: FeatureExtractionService) {
     //GlobalVars.LOGGING_ON = true;
-    this.manager = new DymoManager(undefined, 1);
+    this.manager = new DymoManager(undefined, 1, null, null, 'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav');
     this.manager.init('https://semantic-player.github.io/dymo-core/ontologies/')
       .then(() => {
         let store = this.manager.getStore();

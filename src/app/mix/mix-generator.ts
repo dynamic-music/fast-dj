@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
-import { DymoGenerator, ExpressionGenerator, DymoManager, uris } from 'dymo-core';
+import { DymoGenerator, ExpressionGenerator, DymoManager, DymoStore, uris } from 'dymo-core';
 
 export class MixGenerator {
 
   private mixDymoUri: string;
   private songs: string[] = [];
   private transitions = []; //ARRAY OF CONSTRAINT ARRAYS FOR NOW
-  private store;
+  private store: DymoStore;
   private expressionGen: ExpressionGenerator;
 
   constructor(private generator: DymoGenerator, private manager: DymoManager) {
@@ -19,7 +19,7 @@ export class MixGenerator {
     return this.mixDymoUri;
   }
 
-  transitionImmediatelyToRandomBars(songUri: string, numBars: number): Promise<any> {
+  transitionImmediatelyToRandomBars(songUri: string, numBars = 2): Promise<any> {
     let bars = this.registerSongAndGetBars(songUri);
     let randomBar = _.random(bars.length-numBars);
     bars.slice(randomBar, randomBar+numBars).forEach(p =>
@@ -27,8 +27,8 @@ export class MixGenerator {
     return Promise.resolve();
   }
 
-  transitionImmediatelyByCrossfade(songUri: string, numBars = 4, startingBar = 8): Promise<any> {
-    let newSongBars = this.registerSongAndGetBars(songUri).slice(startingBar);
+  transitionImmediatelyByCrossfade(songUri: string, numBars = 8, offsetBar = 8): Promise<any> {
+    let newSongBars = this.registerSongAndGetBars(songUri).slice(offsetBar);
     //remove rest of old song, replace transition parts with conjunctions
     let oldSongBars = [];
     if (this.songs.length > 1) {
@@ -59,6 +59,28 @@ export class MixGenerator {
         console.log("triples", this.store.size());
         console.log("observers", this.store.getValueObserverCount());
       });
+  }
+
+  echoFreeze(songUri: string, numBars = 2): Promise<any> {
+    let newSongBars = this.registerSongAndGetBars(songUri);
+    if (this.songs.length > 1) {
+      //remove rest of old song
+      let currentPos = this.manager.getNavigatorPosition(this.mixDymoUri);
+      let removedBars = this.store.removeParts(this.mixDymoUri, currentPos+1).slice(0, numBars);
+      //delay out last bar
+      let lastBar = this.store.findPartAt(this.mixDymoUri, currentPos);
+      this.store.setParameter(lastBar, uris.DELAY, 1);
+      //add silence for n bars
+      let lastBarDuration = this.store.findFeatureValue(lastBar, uris.DURATION_FEATURE);
+      let emptyBar = this.generator.addDymo();
+      this.store.setFeature(emptyBar, uris.DURATION_FEATURE, lastBarDuration);
+      _.times(numBars, () => this.store.addPart(this.mixDymoUri, emptyBar));
+    }
+    //add new song
+    newSongBars.forEach(p => this.store.addPart(this.mixDymoUri, p));
+    //currently delays need to be initialized for this to work
+    newSongBars.forEach(p => this.store.setParameter(p, uris.DELAY, 0));
+    return Promise.resolve();
   }
 
   /**returns a number of controls that trigger the transition*/
