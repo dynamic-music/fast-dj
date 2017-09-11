@@ -4,63 +4,109 @@ import { DymoGenerator, ExpressionGenerator, DymoManager, uris } from 'dymo-core
 export class MixGenerator {
 
   private mixDymoUri: string;
-  private expressionGen;
+  private songs: string[] = [];
+  private transitions = []; //ARRAY OF CONSTRAINT ARRAYS FOR NOW
+  private store;
+  private expressionGen: ExpressionGenerator;
 
   constructor(private generator: DymoGenerator, private manager: DymoManager) {
-    this.expressionGen = new ExpressionGenerator(generator.getStore());
+    this.mixDymoUri = this.generator.addDymo();
+    this.store = generator.getStore();
+    this.expressionGen = new ExpressionGenerator(this.store);
   }
 
-  getMixDymo() {
+  getMixDymo(): string {
     return this.mixDymoUri;
   }
 
-  transitionImmediatelyToRandomBars(songDymoUri: string, durationInBars: number): string {
-    if (!this.mixDymoUri) {
-      this.mixDymoUri = this.generator.addDymo();
-    }
-    let songParts = this.generator.getStore().findParts(songDymoUri);
-    let randomBar = _.random(songParts.length-durationInBars);
-    songParts.slice(randomBar, randomBar+durationInBars).forEach(p =>
-      this.generator.getStore().addPart(this.mixDymoUri, p));
-    return this.mixDymoUri;
+  transitionImmediatelyToRandomBars(songUri: string, numBars: number): Promise<any> {
+    let bars = this.registerSongAndGetBars(songUri);
+    let randomBar = _.random(bars.length-numBars);
+    bars.slice(randomBar, randomBar+numBars).forEach(p =>
+      this.store.addPart(this.mixDymoUri, p));
+    return Promise.resolve();
   }
 
-  transitionImmediatelyByCrossfade(songDymoUri: string, duration: number): string {
-    if (!this.mixDymoUri) {
-      this.mixDymoUri = this.generator.addDymo();
+  transitionImmediatelyByCrossfade(songUri: string, numBars = 4, startingBar = 8): Promise<any> {
+    let newSongBars = this.registerSongAndGetBars(songUri).slice(startingBar);
+    //remove rest of old song, replace transition parts with conjunctions
+    let oldSongBars = [];
+    if (this.songs.length > 1) {
+      let currentPos = this.manager.getNavigatorPosition(this.mixDymoUri);
+      //only keep the bars needed for the transition
+      oldSongBars = this.store.removeParts(this.mixDymoUri, currentPos+1).slice(0, numBars);
+      oldSongBars.forEach((o,i) => this.generator.addConjunction(this.mixDymoUri, [o, newSongBars[i]]));
     }
-    let newSongParts = this.generator.getStore().findParts(songDymoUri);
+    //append rest of new song
+    newSongBars.slice(numBars).forEach(p => this.store.addPart(this.mixDymoUri, p));
+    //create ramp and crossfade
+    let rampUri = this.generator.addRampControl(0, 10, 200);
+    let crossfade = this.makeCrossfade(rampUri, oldSongBars, newSongBars);
+    //create tempo transition
+    let tempoParam = this.generator.addCustomParameter(uris.CONTEXT_URI+"Tempo");
+    let newTempo = this.getTempoFromBar(newSongBars[0]);
+    let oldTempo = oldSongBars.length > 0 ? this.getTempoFromBar(oldSongBars[0]) : newTempo;
+    let tempoTransition = this.makeSetsConstraint(
+      {'t':[tempoParam], 'r':[rampUri]}, 't == r*'+newTempo+'+(1-r)*'+oldTempo);
+    //create beatmatch
+    let beats = _.flatten(oldSongBars.concat(newSongBars).map(p => this.store.findParts(p)));
+    let beatMatch = this.makeSetsConstraint(
+      {'d':beats, 't':[tempoParam]}, 'PlaybackRate(d) == t/60*DurationFeature(d)');
 
-    let currentPosition = this.manager.getNavigatorPosition(this.mixDymoUri, 1);
-    console.log(currentPosition)
-
-    let ramp = this.generator.addControl('', uris.RAMP);
-
-    let removedParts;
-
-    if (currentPosition) {
-      removedParts = this.generator.getStore().removeParts(this.mixDymoUri, currentPosition+1);
-
-      _.range(0, duration).forEach(i => {
-        var currentTransitionPart = this.generator.addDymo(this.mixDymoUri, null, uris.CONJUNCTION);
-        this.generator.getStore().addPart(currentTransitionPart, removedParts[i]);
-        this.generator.getStore().addPart(currentTransitionPart, newSongParts[i]);
+    return this.loadAndTriggerTransition(rampUri, beatMatch, tempoTransition, ...crossfade)
+      .then(() => {
+        console.log("tempo", oldTempo, newTempo);
+        console.log("triples", this.store.size());
+        console.log("observers", this.store.getValueObserverCount());
       });
+  }
 
-      this.expressionGen.addConstraint(this.mixDymoUri,
-        '∀ d in '+JSON.stringify(removedParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == 1-r');
+  /**returns a number of controls that trigger the transition*/
+  private loadAndTriggerTransition(...uris: string[]): Promise<any> {
+    return this.manager.loadFromStore(...uris)
+      .then(l => {
+        //add loaded transition
+        this.transitions.push(l.constraints);
+        //return controls
+        return _.values(l.controls);
+      })
+      .then(controls => {
+        //TODO LET SCHEDULER DO THIS!!!!
+        setTimeout(() => {
+          //stop previous transition
+          if (this.transitions.length > 1)
+            this.transitions.slice(-2)[0].forEach(t => t.stopMaintaining());
+          //start new transition
+          controls.forEach(c => c.startUpdate());
+        }, 1000); //random time
+      })
+  }
+
+  private registerSongAndGetBars(songUri: string): string[] {
+    this.songs.push(songUri);
+    return this.store.findParts(songUri);
+  }
+
+  private makeCrossfade(rampUri: string, oldSongUris: string[], newSongUris: string[]): string[] {
+    var fadeOut = this.makeRampConstraint(rampUri, oldSongUris, 'Amplitude(d) == 1-r');
+    var fadeIn = this.makeRampConstraint(rampUri, newSongUris, 'Amplitude(d) == r');
+    return [fadeOut, fadeIn].filter(c => c); //remove undefined
+  }
+
+  private makeRampConstraint(rampUri: string, dymoUris: string[], expression: string): string {
+    if (dymoUris.length > 0) {
+      return this.makeSetsConstraint({'d':dymoUris, 'r':[rampUri]}, expression);
     }
+  }
 
-    newSongParts.slice(duration).forEach(p => this.generator.getStore().addPart(this.mixDymoUri, p));
+  private makeSetsConstraint(sets: {}, expression: string): string {
+    let vars = _.keys(sets).map(k => '∀ '+k+' in '+JSON.stringify(sets[k])+' => ').join('');
+    return this.expressionGen.addConstraint(this.mixDymoUri, vars+expression, true);
+  }
 
-    console.log('∀ d in '+JSON.stringify(newSongParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == 1-r')
-
-    var constraint = this.expressionGen.addConstraint(this.mixDymoUri,
-      '∀ d in '+JSON.stringify(newSongParts)+' => ∀ r in ["'+ramp+'"] => Amplitude(x) == r');
-
-    //TODO LOAD CONSTRAINTS
-
-    return this.mixDymoUri;
+  private getTempoFromBar(barUri: string): number {
+    var barDuration = this.store.findFeatureValue(barUri, uris.DURATION_FEATURE);
+    return 1/(barDuration/4)*60;
   }
 
 }
