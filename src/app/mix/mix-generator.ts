@@ -19,6 +19,30 @@ export class MixGenerator {
     return this.mixDymoUri;
   }
 
+  //TODO dymo-core throws the occasional error due to list editing concurrency problem
+  addRandomBeatToLoop(songUri: string, loopDuration = 2): Promise<any> {
+    let currentBeats = this.store.findParts(this.mixDymoUri);
+    //find a random beat in the song
+    let bars = this.registerSongAndGetBars(songUri);
+    let randomBar = bars[_.random(bars.length)];
+    let randomBeat = this.store.findParts(randomBar)[_.random(4)];
+    if (currentBeats.length == 0) {
+      //add silence at beginning and end of loop to ensure constant length :/
+      let silenceUri = this.generator.addDymo(this.mixDymoUri);
+      this.store.setParameter(silenceUri, uris.ONSET, 0);
+      silenceUri = this.generator.addDymo(this.mixDymoUri);
+      this.store.setParameter(silenceUri, uris.ONSET, loopDuration);
+      currentBeats = this.store.findParts(this.mixDymoUri);
+    }
+    //set a random onset and add the beat to the loop at correct position
+    let currentOnsets = currentBeats.map(b => this.store.findParameterValue(b, uris.ONSET));
+    let randomOnset = _.random(loopDuration, true);
+    this.store.setParameter(randomBeat, uris.ONSET, randomOnset);
+    let beatPosition = currentOnsets.filter(o => o < randomOnset).length;
+    this.store.insertPartAt(this.mixDymoUri, randomBeat, beatPosition);
+    return Promise.resolve();
+  }
+
   transitionImmediatelyToRandomBars(songUri: string, numBars = 2): Promise<any> {
     let bars = this.registerSongAndGetBars(songUri);
     let randomBar = _.random(bars.length-numBars);

@@ -49,7 +49,7 @@ export class AppComponent {
       .then(buffer => this.extractionService.extractBeats(buffer))
       .then(beats => DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, url, beats))
       .then(newDymo => this.manager.loadFromStore(newDymo)
-        .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo, 8)))
+        .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo)))
       .then(() => this.keepOnPlaying(this.mixGen.getMixDymo()))
       .then(() => this.activity = _.toLower(acceptedFile.file.name));
   }
