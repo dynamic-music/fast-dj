@@ -51,7 +51,7 @@ export class MixGenerator {
     //create beatmatch
     let beats = _.flatten(oldSongBars.concat(newSongBars).map(p => this.store.findParts(p)));
     let beatMatch = this.makeSetsConstraint(
-      {'d':beats, 't':[tempoParam]}, 'PlaybackRate(d) == t/60*DurationFeature(d)');
+      {'d':beats, 't':[tempoParam]}, 'TimeStretchRatio(d) == t/60*DurationFeature(d)');
 
     return this.loadAndTriggerTransition(rampUri, beatMatch, tempoTransition, ...crossfade)
       .then(() => {
