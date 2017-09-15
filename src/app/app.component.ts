@@ -15,9 +15,11 @@ function* createColourCycleIterator(colours: string[]) {
   }
 }
 
-interface IndicatorStyle {
+interface StatusIndictator {
   isBeat: boolean;
   colour: string;
+  activity?: string;
+  message?: string;
 }
 
 @Component({
@@ -26,16 +28,27 @@ interface IndicatorStyle {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'app';
   private dymoGen: DymoGenerator;
   private mixGen: MixGenerator;
   private manager: DymoManager; 
   private isPlaying = false;
   private previousDymos = [];
-  private currentStyle: IndicatorStyle;
+  private currentStatus: StatusIndictator;
   private cyclicColours: Iterator<string>;
-  private status;
-  private activity;
+  private set status(message: string) {
+    this.currentStatus = {
+      ...this.currentStatus,
+      isBeat: true,
+      message
+    };
+  }
+  private set activity(activity: string) {
+    this.currentStatus = {
+      ...this.currentStatus,
+      colour: this.getNextColour(),
+      activity
+    };
+  }
 
   constructor(private extractionService: FeatureExtractionService) {
     //GlobalVars.LOGGING_ON = true;
@@ -46,7 +59,7 @@ export class AppComponent {
       '#e55934',
       '#fa7921'
     ]);
-    this.currentStyle = {
+    this.currentStatus = {
       isBeat: false,
       colour: this.getNextColour()
     };
@@ -63,17 +76,10 @@ export class AppComponent {
          // TODO identify which track is playing, and associate with a specific colour
         const nChanged = _.difference(updatedDymos, this.previousDymos).length;
         if (nChanged > 0) {
-          this.status = this.status == "SPINNING" ? "spinning" : "SPINNING";
-          const trackChanged = nChanged === this.previousDymos.length;
-          const colour = trackChanged ? 
-            this.getNextColour() : this.currentStyle.colour;
-            this.currentStyle = {
-              colour,
-              isBeat: true
-            };
+          this.status = this.currentStatus.message == "SPINNING" ? "spinning" : "SPINNING";
         } else {
-          this.currentStyle = {
-            ...this.currentStyle,
+          this.currentStatus = {
+            ...this.currentStatus,
             isBeat: false
           };
         }
