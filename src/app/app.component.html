@@ -4,6 +4,11 @@
   class="custom-component-drop-zone"
   (ng2FileDropFileAccepted)="dragFileAccepted($event)"
 >
-<h2>{{status}}</h2>
-<p>{{activity}}</p>
+  <div
+    [ngClass]="{beat: currentStatus.type === 'SPINNING', 'status-indicator': true}"
+    [style.backgroundColor]="currentStatus.colour"
+  >
+    <h2>{{currentStatus.type}}</h2>
+    <p>{{currentStatus.message}}</p>
+  </div>
 </div>
