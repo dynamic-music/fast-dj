@@ -16,7 +16,6 @@ function* createColourCycleIterator(colours: string[]) {
 }
 
 interface StatusIndictator {
-  isBeat: boolean;
   colour: string;
   activity?: string;
   message?: string;
@@ -38,7 +37,6 @@ export class AppComponent {
   private set status(message: string) {
     this.currentStatus = {
       ...this.currentStatus,
-      isBeat: true,
       message
     };
   }
@@ -60,7 +58,7 @@ export class AppComponent {
       '#fa7921'
     ]);
     this.currentStatus = {
-      isBeat: false,
+      message: 'INITIALISING',
       colour: this.getNextColour()
     };
     this.manager = new DymoManager(undefined, 1, null, null, 'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav');
@@ -77,12 +75,7 @@ export class AppComponent {
         const nChanged = _.difference(updatedDymos, this.previousDymos).length;
         if (nChanged > 0) {
           this.status = this.currentStatus.message == "SPINNING" ? "spinning" : "SPINNING";
-        } else {
-          this.currentStatus = {
-            ...this.currentStatus,
-            isBeat: false
-          };
-        }
+        } 
         this.previousDymos = updatedDymos;
       });
   }
