@@ -17,8 +17,8 @@ function* createColourCycleIterator(colours: string[]) {
 
 interface StatusIndictator {
   colour: string;
-  activity?: string;
-  message?: string;
+  message: string;
+  type: string;
 }
 
 @Component({
@@ -34,17 +34,17 @@ export class AppComponent {
   private previousDymos = [];
   private currentStatus: StatusIndictator;
   private cyclicColours: Iterator<string>;
-  private set status(message: string) {
+  private set status(type: string) {
     this.currentStatus = {
       ...this.currentStatus,
-      message
+      type
     };
   }
-  private set activity(activity: string) {
+  private set message(message: string) {
     this.currentStatus = {
       ...this.currentStatus,
       colour: this.getNextColour(),
-      activity
+      message
     };
   }
 
@@ -58,7 +58,8 @@ export class AppComponent {
       '#fa7921'
     ]);
     this.currentStatus = {
-      message: 'INITIALISING',
+      type: 'INITIALISING',
+      message: 'Loading',
       colour: this.getNextColour()
     };
     this.manager = new DymoManager(undefined, 1, null, null, 'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav');
@@ -67,14 +68,15 @@ export class AppComponent {
         let store = this.manager.getStore();
         this.dymoGen = new DymoGenerator(store);
         this.mixGen = new MixGenerator(this.dymoGen, this.manager);
-        this.status =  "READY";
+        this.status =  'READY';
+        this.message = 'Drop audio here'
       });
     this.manager.getPlayingDymoUris()
       .subscribe(updatedDymos => {
          // TODO identify which track is playing, and associate with a specific colour
         const nChanged = _.difference(updatedDymos, this.previousDymos).length;
         if (nChanged > 0) {
-          this.status = this.currentStatus.message == "SPINNING" ? "spinning" : "SPINNING";
+          this.status = this.currentStatus.type == "SPINNING" ? "spinning" : "SPINNING";
         } 
         this.previousDymos = updatedDymos;
       });
@@ -82,7 +84,7 @@ export class AppComponent {
 
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
     const url = URL.createObjectURL(acceptedFile.file);
-    this.activity = _.toLower("loading "+acceptedFile.file.name);
+    this.message = _.toLower("loading "+acceptedFile.file.name);
     //console.log("loading "+acceptedFile.file.name, this.manager.getStore().size())
     this.manager.getAudioBank().loadBuffer(url)
       .then(buffer => this.extractionService.extractBeats(buffer))
@@ -90,7 +92,7 @@ export class AppComponent {
       .then(newDymo => this.manager.loadFromStore(newDymo)
         .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo)))
       .then(() => this.keepOnPlaying(this.mixGen.getMixDymo()))
-      .then(() => this.activity = _.toLower(acceptedFile.file.name));
+      .then(() => this.message = _.toLower(acceptedFile.file.name));
   }
 
   private keepOnPlaying(dymoUri: string) {
