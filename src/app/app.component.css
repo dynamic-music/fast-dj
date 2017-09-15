@@ -1,6 +1,9 @@
 .custom-component-drop-zone {
   width: 100%;
   height: 100%;
+  font-size: 50px;
+  font-family: "Comic Sans MS";
+  text-align: center;
 }
 
 .status-indicator {
@@ -11,5 +14,5 @@
 }
 
 .beat {
-  opacity: 1.0
+  opacity: 1.0;
 }
