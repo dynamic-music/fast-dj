@@ -1,11 +1,10 @@
 import * as _ from 'lodash';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
 import { DymoGenerator, DymoTemplates, DymoManager, GlobalVars, uris } from 'dymo-core';
 import { MixGenerator } from './mix/mix-generator';
-import {
-  FeatureExtractionService
-} from './services/feature-extraction/feature-extraction.service';
+import { FeatureExtractionService } from './feature-extraction.service';
+import { ActivatedRoute } from '@angular/router';
 
 function* createColourCycleIterator(colours: string[]) {
   let index = 0;
@@ -21,34 +20,56 @@ interface StatusIndictator {
   type: string;
 }
 
+interface AppState {
+  inDevMode: boolean;
+  isPlaying: boolean;
+  status: StatusIndictator;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit  {
   private dymoGen: DymoGenerator;
   private mixGen: MixGenerator;
   private manager: DymoManager; 
-  private isPlaying = false;
   private previousDymos = [];
-  private currentStatus: StatusIndictator;
   private cyclicColours: Iterator<string>;
+  private currentState: AppState;
+
+  private get state(): AppState {
+    return this.currentState;
+  }
+  private set state(newState: AppState) {
+    this.currentState = newState;
+  }
+
   private set status(type: string) {
-    this.currentStatus = {
-      ...this.currentStatus,
+    const status = {
+      ...this.state.status,
       type
+    };
+    this.state = {
+      ...this.state,
+      status
     };
   }
   private set message(message: string) {
-    this.currentStatus = {
-      ...this.currentStatus,
+    const status = {
+      ...this.state.status,
       colour: this.getNextColour(),
       message
     };
+    this.state = {
+      ...this.state,
+      status
+    };
   }
 
-  constructor(private extractionService: FeatureExtractionService) {
+  constructor(private extractionService: FeatureExtractionService,
+              private route: ActivatedRoute) {
     //GlobalVars.LOGGING_ON = true;
     this.cyclicColours = createColourCycleIterator([
       '#5bc0eb',
@@ -57,12 +78,22 @@ export class AppComponent {
       '#e55934',
       '#fa7921'
     ]);
-    this.currentStatus = {
-      type: 'INITIALISING',
-      message: 'Loading',
-      colour: this.getNextColour()
+    this.state = {
+      isPlaying: false,
+      inDevMode: false,
+      status: {
+        type: 'INITIALISING',
+        message: 'Loading',
+        colour: this.getNextColour()
+      }
     };
-    this.manager = new DymoManager(undefined, 1, null, null, 'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav');
+    this.manager = new DymoManager(
+      undefined,
+      1,
+      null,
+      null,
+      'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav'
+    );
     this.manager.init('https://semantic-player.github.io/dymo-core/ontologies/')
       .then(() => {
         let store = this.manager.getStore();
@@ -76,10 +107,23 @@ export class AppComponent {
          // TODO identify which track is playing, and associate with a specific colour
         const nChanged = _.difference(updatedDymos, this.previousDymos).length;
         if (nChanged > 0) {
-          this.status = this.currentStatus.type == "SPINNING" ? "spinning" : "SPINNING";
+          this.status = this.state.status.type === "SPINNING" ? 
+            "spinning" : "SPINNING";
         } 
         this.previousDymos = updatedDymos;
       });
+  }
+
+  ngOnInit() {
+    this.route
+    .queryParamMap
+    .map(params => {
+      this.state = {
+        ...this.state,
+        inDevMode: params.has('dev')
+      };
+    })
+    .subscribe();
   }
 
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
@@ -96,8 +140,11 @@ export class AppComponent {
   }
 
   private keepOnPlaying(dymoUri: string) {
-    if (!this.isPlaying) {
-      this.isPlaying = true;
+    if (!this.state.isPlaying) {
+      this.state = {
+        ...this.state,
+        isPlaying: true
+      };
       this.manager.startPlayingUri(dymoUri);
     }
   }

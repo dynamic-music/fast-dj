@@ -5,10 +5,11 @@
   (ng2FileDropFileAccepted)="dragFileAccepted($event)"
 >
   <div
-    [ngClass]="{beat: currentStatus.type === 'SPINNING', 'status-indicator': true}"
-    [style.backgroundColor]="currentStatus.colour"
+    [ngClass]="{beat: state.status.type === 'SPINNING', 'status-indicator': true}"
+    [style.backgroundColor]="state.status.colour"
   >
-    <h2>{{currentStatus.type}}</h2>
-    <p>{{currentStatus.message}}</p>
+    <h2>{{state.status.type}}</h2>
+    <p>{{state.status.message}}</p>
+    <dj-dev-controls *ngIf="state.inDevMode">Text to show</dj-dev-controls>
   </div>
 </div>
