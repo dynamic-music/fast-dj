@@ -55,7 +55,7 @@ export class MixGenerator {
     return Promise.resolve();
   }
 
-  transitionImmediatelyByCrossfade(songUri: string, numBars = 8, offsetBar = 8): Promise<any> {
+  transitionImmediatelyByCrossfadeAndBeatmatch(songUri: string, numBars = 8, offsetBar = 8): Promise<any> {
     let newSongBars = this.registerSongAndGetBars(songUri).slice(offsetBar);
     //remove rest of old song, replace transition parts with conjunctions
     let oldSongBars = [];
@@ -79,13 +79,13 @@ export class MixGenerator {
     //create beatmatch
     let beats = _.flatten(oldSongBars.concat(newSongBars).map(p => this.store.findParts(p)));
     let beatMatch = this.makeSetsConstraint(
-      {'d':beats, 't':[tempoParam]}, 'PlaybackRate(d) == t/60*DurationFeature(d)');
+      {'d':beats, 't':[tempoParam]}, 'TimeStretchRatio(d) == t/60*DurationFeature(d)');
 
     return this.loadAndTriggerTransition(rampUri, beatMatch, tempoTransition, ...crossfade)
       .then(() => {
-        console.log("tempo", oldTempo, newTempo);
-        console.log("triples", this.store.size());
-        console.log("observers", this.store.getValueObserverCount());
+        //console.log("tempo", oldTempo, newTempo);
+        //console.log("triples", this.store.size());
+        //console.log("observers", this.store.getValueObserverCount());
       });
   }
 
@@ -156,7 +156,7 @@ export class MixGenerator {
 
   private getTempoFromBar(barUri: string): number {
     var barDuration = this.store.findFeatureValue(barUri, uris.DURATION_FEATURE);
-    return 1/(barDuration/4)*60;
+    return 60/(barDuration/4);
   }
 
 }
