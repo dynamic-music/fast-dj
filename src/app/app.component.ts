@@ -85,6 +85,7 @@ export class AppComponent implements OnInit  {
       this.message = 'Drop audio here'
     });
     this.dj.getBeatObservable().subscribe(b => {
+      console.warn(b);
       this.status = this.state.status.type === "SPINNING" ?
         "spinning" : "SPINNING";
     })
