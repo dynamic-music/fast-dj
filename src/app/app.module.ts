@@ -2,17 +2,19 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { Ng2FileDropModule } from 'ng2-file-drop';
-import {
-  FeatureExtractionService
-} from './services/feature-extraction/feature-extraction.service';
+import { FeatureExtractionService } from './feature-extraction.service';
+import { RouterModule, Routes } from '@angular/router';
+import { DevControlsComponent } from './dev-controls/dev-controls.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    DevControlsComponent
   ],
   imports: [
     BrowserModule,
-    Ng2FileDropModule
+    Ng2FileDropModule,
+    RouterModule.forRoot([])
   ],
   providers: [
     FeatureExtractionService
