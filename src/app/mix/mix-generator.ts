@@ -1,6 +1,10 @@
 import * as _ from 'lodash';
 import { DymoGenerator, ExpressionGenerator, DymoManager, DymoStore, uris } from 'dymo-core';
 
+//export const TRANSITIONS: Map<string,Function> = new Map<string,Function>();
+//TRANSITIONS.set("BeatmatchCrossfade", )
+
+
 export class MixGenerator {
 
   private mixDymoUri: string;

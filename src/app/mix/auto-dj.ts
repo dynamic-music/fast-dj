@@ -47,8 +47,13 @@ export class AutoDj {
       .then(beats => DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats))
       .then(newDymo => this.manager.loadFromStore(newDymo)
         //.then(() => this.reasoner.decideWhatToDo(newDymo))
-        .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo)))
+        .then(() => this.getRandomTransition()(newDymo)))
       .then(() => this.keepOnPlaying(this.mixGen.getMixDymo()));
+  }
+
+  private getRandomTransition(): Function {
+    let transitions = [this.mixGen.transitionImmediatelyByCrossfade, this.mixGen.echoFreeze];
+    return transitions[_.random(transitions.length)];
   }
 
   private keepOnPlaying(dymoUri: string) {
