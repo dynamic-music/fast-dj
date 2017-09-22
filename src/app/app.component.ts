@@ -1,10 +1,8 @@
-import * as _ from 'lodash';
 import { Component, OnInit } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
-import { DymoGenerator, DymoTemplates, DymoManager, GlobalVars, uris } from 'dymo-core';
-import { MixGenerator } from './mix/mix-generator';
-import { FeatureExtractionService } from './feature-extraction.service';
 import { ActivatedRoute } from '@angular/router';
+import { FeatureExtractionService } from './feature-extraction.service';
+import { AutoDj } from './mix/auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
   let index = 0;
@@ -22,7 +20,6 @@ interface StatusIndictator {
 
 interface AppState {
   inDevMode: boolean;
-  isPlaying: boolean;
   status: StatusIndictator;
 }
 
@@ -32,12 +29,9 @@ interface AppState {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit  {
-  private dymoGen: DymoGenerator;
-  private mixGen: MixGenerator;
-  private manager: DymoManager; 
-  private previousDymos = [];
   private cyclicColours: Iterator<string>;
   private currentState: AppState;
+  private dj: AutoDj;
 
   private get state(): AppState {
     return this.currentState;
@@ -68,8 +62,7 @@ export class AppComponent implements OnInit  {
     };
   }
 
-  constructor(private extractionService: FeatureExtractionService,
-              private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute, private extractionService: FeatureExtractionService) {
     //GlobalVars.LOGGING_ON = true;
     this.cyclicColours = createColourCycleIterator([
       '#5bc0eb',
@@ -79,7 +72,6 @@ export class AppComponent implements OnInit  {
       '#fa7921'
     ]);
     this.state = {
-      isPlaying: false,
       inDevMode: false,
       status: {
         type: 'INITIALISING',
@@ -87,31 +79,15 @@ export class AppComponent implements OnInit  {
         colour: this.getNextColour()
       }
     };
-    this.manager = new DymoManager(
-      undefined,
-      1,
-      null,
-      null,
-      'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav'
-    );
-    this.manager.init('https://semantic-player.github.io/dymo-core/ontologies/')
-      .then(() => {
-        let store = this.manager.getStore();
-        this.dymoGen = new DymoGenerator(store);
-        this.mixGen = new MixGenerator(this.dymoGen, this.manager);
-        this.status =  'READY';
-        this.message = 'Drop audio here'
-      });
-    this.manager.getPlayingDymoUris()
-      .subscribe(updatedDymos => {
-         // TODO identify which track is playing, and associate with a specific colour
-        const nChanged = _.difference(updatedDymos, this.previousDymos).length;
-        if (nChanged > 0) {
-          this.status = this.state.status.type === "SPINNING" ? 
-            "spinning" : "SPINNING";
-        } 
-        this.previousDymos = updatedDymos;
-      });
+    this.dj = new AutoDj(null, this.extractionService);
+    this.dj.init().then(() => {
+      this.status =  'READY';
+      this.message = 'Drop audio here'
+    });
+    this.dj.getBeatObservable().subscribe(b => {
+      this.status = this.state.status.type === "SPINNING" ?
+        "spinning" : "SPINNING";
+    })
   }
 
   ngOnInit() {
@@ -128,25 +104,9 @@ export class AppComponent implements OnInit  {
 
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
     const url = URL.createObjectURL(acceptedFile.file);
-    this.message = _.toLower("loading "+acceptedFile.file.name);
-    //console.log("loading "+acceptedFile.file.name, this.manager.getStore().size())
-    this.manager.getAudioBank().loadBuffer(url)
-      .then(buffer => this.extractionService.extractBeats(buffer))
-      .then(beats => DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, url, beats))
-      .then(newDymo => this.manager.loadFromStore(newDymo)
-        .then(() => this.mixGen.transitionImmediatelyByCrossfade(newDymo)))
-      .then(() => this.keepOnPlaying(this.mixGen.getMixDymo()))
-      .then(() => this.message = _.toLower(acceptedFile.file.name));
-  }
-
-  private keepOnPlaying(dymoUri: string) {
-    if (!this.state.isPlaying) {
-      this.state = {
-        ...this.state,
-        isPlaying: true
-      };
-      this.manager.startPlayingUri(dymoUri);
-    }
+    this.message = ("loading "+acceptedFile.file.name).toLowerCase();
+    this.dj.transitionToSong(url)
+      .then(() => this.message = acceptedFile.file.name.toLowerCase());
   }
 
   private getNextColour(): string {
