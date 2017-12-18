@@ -34,17 +34,17 @@ export class Analyzer {
     const durations = beats.map(b => this.store.findFeatureValue(b, uris.DURATION_FEATURE));
     //TODO GET A MEASURE THAT WORKS!!!!
     console.log("regularity", math.std(durations))
-    return math.std(durations) < .2;
+    return math.std(durations) < .1;
   }
 
   tempoSimilar(song1Uri: string, song2Uri: string): boolean {
     const ratio = this.getTempoRatio(song1Uri, song2Uri);
-    return this.isSimilar(1, Math.round(ratio));
+    return this.isSimilar(1, ratio);
   }
 
   tempoCloseToMultiple(song1Uri: string, song2Uri: string): boolean {
     const ratio = this.getTempoRatio(song1Uri, song2Uri);
-    return this.isSimilar(ratio, Math.round(ratio));
+    return this.isSimilar(ratio, ratio);
   }
 
   private isSimilar(n1: number, n2: number): boolean {

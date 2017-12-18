@@ -20,12 +20,12 @@ export class AutoDj {
       1,
       null,
       null,
-      'https://semantic-player.github.io/dymo-core/audio/impulse_rev.wav'
+      'https://dynamic-music.github.io/dymo-core/audio/impulse_rev.wav'
     );
   }
 
   init(): Promise<any> {
-    return this.manager.init('https://semantic-player.github.io/dymo-core/ontologies/')
+    return this.manager.init('https://dynamic-music.github.io/dymo-core/ontologies/')
       .then(() => {
         let store = this.manager.getStore();
         this.dymoGen = new DymoGenerator(store);
@@ -80,6 +80,9 @@ export class AutoDj {
         console.log("tempo close")
         //TODO this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatchToMultiple(newSong, oldDymo);
         this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatch(newSong);
+      } else {
+        console.log("give up")
+        this.mixGen.echoFreeze(newSong);
       }
     } else {
       console.log("give up")
