@@ -84,13 +84,9 @@ export class AppComponent implements OnInit  {
       this.status =  'READY';
       this.message = 'Drop audio here'
     });
-    this.dj.getBeatObservable().subscribe(b => {
-      this.status = this.state.status.type === "SPINNING" ?
-        "spinning" : "SPINNING";
-    })
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.route
     .queryParamMap
     .map(params => {
@@ -100,6 +96,12 @@ export class AppComponent implements OnInit  {
       };
     })
     .subscribe();
+    
+    (await this.dj.getBeatObservable())
+    .subscribe(b => {
+      this.status = this.state.status.type === "SPINNING" ?
+        "spinning" : "SPINNING";
+    })
   }
 
   private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
