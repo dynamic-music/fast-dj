@@ -10,8 +10,13 @@ import { toSeconds } from 'piper-js/time';
 import createQmWorker from '@extractors/qm';
 
 // this spawns a web worker, which we only want to do once
-// so we instantiate 
+// so we instantiate
 const qmWorker = createQmWorker();
+
+export interface QmExtractor {
+  key: string,
+  outputId: string
+}
 
 export interface Value<T> {
   value: T;
@@ -19,6 +24,10 @@ export interface Value<T> {
 export interface Beat {
   time: Value<number>;
   label: Value<string>;
+}
+export interface Key {
+  time: Value<number>;
+  value: number;
 }
 
 interface AudioData {
@@ -55,7 +64,7 @@ export class FeatureExtractionService {
     return this.client.collect(request);
   }
 
-  extractBeats(buffer: AudioBuffer): Promise<Beat[]> {
+  private extractQmFeature(buffer: AudioBuffer, feature: QmExtractor): Promise<FeatureList> {
     const {channels, sampleRate} = bufferToAudioData(buffer);
     return this.extract({
       audioData: channels,
@@ -63,17 +72,28 @@ export class FeatureExtractionService {
         sampleRate,
         channelCount: channels.length
       },
+      key: feature.key,
+      outputId: feature.outputId
+    }).then(response => response.features.collected);
+  }
+
+  extractBeats(buffer: AudioBuffer): Promise<Beat[]> {
+    return this.extractQmFeature(buffer, {
       key: 'qm-vamp-plugins:qm-barbeattracker',
       outputId: 'beats'
-    }).then(mapFeaturesToBeats);
+    }).then(features => features.map(feature => ({
+      time: {value: toSeconds(feature.timestamp)},
+      label: {value: feature.label}
+    })));
   }
-}
 
-function mapFeaturesToBeats(response: Response): Beat[] {
-  // TODO ought to actually validate the shape / type
-  const featureData: FeatureList = response.features.collected as FeatureList;
-  return featureData.map(feature => ({
-    time: {value: toSeconds(feature.timestamp)},
-    label: {value: feature.label}
-  }));
+  extractKey(buffer: AudioBuffer): Promise<Key[]> {
+    return this.extractQmFeature(buffer, {
+      key: 'qm-vamp-plugins:qm-keydetector',
+      outputId: 'tonic'
+    }).then(features => features.map(feature => ({
+      time: {value: toSeconds(feature.timestamp)},
+      value: feature.featureValues[0]
+    })));
+  }
 }

@@ -13,6 +13,19 @@ export class Analyzer {
 
   constructor(private store: DymoStore) {}
 
+  async getData(song1: string, song2: string) {
+    return [
+      await this.getTempo(song1),
+      await this.getTempo(song2),
+      await this.getTempoRatio(song1, song2),
+      await this.getTempoRatio(song2, song1),
+      await this.getTempoMultiple(song1, song2),
+      await this.getTempoMultiple(song2, song1),
+      await this.getRegularity(song1),
+      await this.getRegularity(song2),
+    ]
+  }
+
   getMainSongBody(songUri: string): Pair<number> {
     return {first:0,second:1};
   }
@@ -23,6 +36,11 @@ export class Analyzer {
     return 60/math.mean(durations);
   }
 
+  async getTempoMultiple(song1Uri: string, song2Uri: string): Promise<number> {
+    const tempoRatio = await this.getTempoRatio(song1Uri, song2Uri);
+    return tempoRatio % 1;
+  }
+
   async getTempoRatio(song1Uri: string, song2Uri: string): Promise<number> {
     const tempoRatio = await this.getTempo(song1Uri) / await this.getTempo(song2Uri);
     console.log("tempo ratio", tempoRatio);
@@ -30,20 +48,17 @@ export class Analyzer {
   }
 
   async hasRegularBeats(songUri: string): Promise<boolean> {
+    return await this.getRegularity(songUri) < .1;
+  }
+
+  async getRegularity(songUri: string): Promise<number> {
     const durations = await this.getBeatDurations(songUri);
-    //TODO GET A MEASURE THAT WORKS!!!!
-    console.log("regularity", math.std(durations))
-    return math.std(durations) < .1;
+    return math.std(durations);
   }
 
   async tempoSimilar(song1Uri: string, song2Uri: string): Promise<boolean> {
     const ratio = await this.getTempoRatio(song1Uri, song2Uri);
     return this.isSimilar(1, ratio);
-  }
-
-  async tempoCloseToMultiple(song1Uri: string, song2Uri: string): Promise<boolean> {
-    const ratio = await this.getTempoRatio(song1Uri, song2Uri);
-    return this.isSimilar(ratio, ratio);
   }
 
   private isSimilar(n1: number, n2: number): boolean {

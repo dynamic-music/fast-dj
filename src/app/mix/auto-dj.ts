@@ -1,9 +1,10 @@
 import { Observable } from 'rxjs/Observable';
 import * as _ from 'lodash';
-import { DymoGenerator, DymoTemplates, DymoManager, GlobalVars, DymoStore, uris } from 'dymo-core';
+import { DymoGenerator, DymoTemplates, DymoManager, GlobalVars, DymoStore, uris, globals } from 'dymo-core';
 import { MixGenerator } from './mix-generator';
 import { FeatureExtractionService } from '../feature-extraction.service';
 import { Analyzer } from './analyzer';
+import * as d from './decision-tree';
 
 export class AutoDj {
 
@@ -16,6 +17,7 @@ export class AutoDj {
   private isPlaying;
 
   constructor(private featureApi: string, private extractionService: FeatureExtractionService) {
+    d;
     this.manager = new DymoManager(
       undefined,
       1,
@@ -48,6 +50,10 @@ export class AutoDj {
     let buffer = await (await this.manager.getAudioBank()).getAudioBuffer(audioUri);
     let beats = await this.extractionService.extractBeats(buffer);
     let newDymo = await DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats);
+    let keys = await this.extractionService.extractKey(buffer);
+    this.dymoGen.setSummarizingMode(globals.SUMMARY.MEDIAN)
+    await this.dymoGen.addFeature("key", keys, newDymo);
+    console.log(await this.store.findFeatureValue(newDymo, uris.CONTEXT_URI+"key"));
     return this.internalTransition(newDymo);
   }
 
@@ -77,11 +83,11 @@ export class AutoDj {
         console.log("tempo similar")
         //transition using beatmatching and tempo interpolation
         this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatch(newSong);
-      } else if (await analyzer.tempoCloseToMultiple(newSong, previousSong)) {
-        console.log("tempo close")
+      }/* else if (await analyzer.tempoCloseToMultiple(newSong, previousSong)) {
+        console.log("tempo multiple")
         //TODO this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatchToMultiple(newSong, oldDymo);
         this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatch(newSong);
-      } else {
+      }*/ else {
         console.log("give up")
         this.mixGen.echoFreeze(newSong);
       }
