@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
 import { ActivatedRoute } from '@angular/router';
+import { DbService } from './db.service';
 import { FeatureExtractionService } from './feature-extraction.service';
+import { getGuid } from './util';
 import { AutoDj } from './mix/auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
@@ -31,6 +33,7 @@ interface AppState {
 export class AppComponent implements OnInit  {
   private cyclicColours: Iterator<string>;
   private currentState: AppState;
+  private lastTransitionRating: number;
   private dj: AutoDj;
 
   private get state(): AppState {
@@ -62,7 +65,9 @@ export class AppComponent implements OnInit  {
     };
   }
 
-  constructor(private route: ActivatedRoute, private extractionService: FeatureExtractionService) {
+  constructor(private route: ActivatedRoute,
+      private dbService: DbService,
+      private extractionService: FeatureExtractionService) {
     //GlobalVars.LOGGING_ON = true;
     this.cyclicColours = createColourCycleIterator([
       '#5bc0eb',
@@ -96,7 +101,7 @@ export class AppComponent implements OnInit  {
       };
     })
     .subscribe();
-    
+
     (await this.dj.getBeatObservable())
     .subscribe(b => {
       this.status = this.state.status.type === "SPINNING" ?
@@ -104,11 +109,15 @@ export class AppComponent implements OnInit  {
     })
   }
 
-  private dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
+  private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
     const url = URL.createObjectURL(acceptedFile.file);
     this.message = ("loading "+acceptedFile.file.name).toLowerCase();
-    this.dj.transitionToSong(url)
-      .then(() => this.message = acceptedFile.file.name.toLowerCase());
+    const transition = await this.dj.transitionToSong(url);
+    //TODO WAIT TILL TRANSITION DONE!!!!!
+    transition.user = getGuid();
+    transition.rating = this.lastTransitionRating;
+    this.dbService.addTransition(transition);
+    this.message = acceptedFile.file.name.toLowerCase();
   }
 
   private getNextColour(): string {

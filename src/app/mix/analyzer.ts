@@ -7,13 +7,29 @@ export interface Pair<T> {
   second: T
 }
 
+/* {[0]: 0, [7,5]: 1, [2,10]: 2, [9,3]: 3, [4,8]: 4, [11,1]: 5, [6]: 6} */
+const TONAL_DISTANCES = {
+  0: 0,
+  1: 5,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 1,
+  6: 6,
+  7: 1,
+  8: 4,
+  9: 3,
+  10: 2,
+  11: 5
+}
+
 export class Analyzer {
 
   //TODO private resultsCache = Map<string,
 
   constructor(private store: DymoStore) {}
 
-  async getData(song1: string, song2: string) {
+  async getAllFeatures(song1: string, song2: string): Promise<number[]> {
     return [
       await this.getTempo(song1),
       await this.getTempo(song2),
@@ -23,11 +39,24 @@ export class Analyzer {
       await this.getTempoMultiple(song2, song1),
       await this.getRegularity(song1),
       await this.getRegularity(song2),
+      await this.getKey(song1),
+      await this.getKey(song2),
+      await this.getKeyDistance(song1, song2)
     ]
   }
 
   getMainSongBody(songUri: string): Pair<number> {
     return {first:0,second:1};
+  }
+
+  async getKeyDistance(song1Uri: string, song2Uri: string): Promise<number> {
+    let dist = Math.abs(await this.getKey(song1Uri) - await this.getKey(song2Uri));
+    return TONAL_DISTANCES[dist];
+  }
+
+  async getKey(songUri: string): Promise<number> {
+    let key = await this.store.findFeatureValue(songUri, uris.CONTEXT_URI+"key");
+    return key.length ? key[0] : key;
   }
 
   async getTempo(songUri: string): Promise<number> {

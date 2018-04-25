@@ -1,0 +1,24 @@
+/* You can add global styles to this file, and also import other style files */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+@import "~levon-angular-star-rating/src/star-rating";
+
+:focus {outline:0 !important;}
+
+.rating.color-default .star-container .star {
+  svg {
+    fill: #000;
+  }
+  i {
+    color: #000;
+  }
+}
+
+.star.large, .rating.large .star {
+    width: 70px;
+    height: 70px;
+}
