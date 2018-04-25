@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
 import { ActivatedRoute } from '@angular/router';
-import { DbService } from './db.service';
+import { ApiService } from './api.service';
 import { FeatureExtractionService } from './feature-extraction.service';
 import { getGuid } from './util';
+import { Transition } from './types';
 import { AutoDj } from './mix/auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
@@ -33,7 +34,9 @@ interface AppState {
 export class AppComponent implements OnInit  {
   private cyclicColours: Iterator<string>;
   private currentState: AppState;
+  private lastTransition: Transition;
   private lastTransitionRating: number;
+  private transitionDone: boolean = false;
   private dj: AutoDj;
 
   private get state(): AppState {
@@ -66,7 +69,7 @@ export class AppComponent implements OnInit  {
   }
 
   constructor(private route: ActivatedRoute,
-      private dbService: DbService,
+      private apiService: ApiService,
       private extractionService: FeatureExtractionService) {
     //GlobalVars.LOGGING_ON = true;
     this.cyclicColours = createColourCycleIterator([
@@ -110,17 +113,24 @@ export class AppComponent implements OnInit  {
   }
 
   private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
+    this.transitionDone = false;
+    this.lastTransitionRating = null;
     const url = URL.createObjectURL(acceptedFile.file);
     this.message = ("loading "+acceptedFile.file.name).toLowerCase();
-    const transition = await this.dj.transitionToSong(url);
-    //TODO WAIT TILL TRANSITION DONE!!!!!
-    transition.user = getGuid();
-    transition.rating = this.lastTransitionRating;
-    this.dbService.addTransition(transition);
-    this.message = acceptedFile.file.name.toLowerCase();
+    this.lastTransition = await this.dj.transitionToSong(url);
+    this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
+    console.log("duration", this.lastTransition.duration);
+    setTimeout(() => this.transitionDone = true, this.lastTransition.duration*1000);
+  }
+
+  private onRatingChange(event) {
+    this.lastTransition.user = getGuid();
+    this.lastTransition.rating = event.rating;
+    this.apiService.addTransition(this.lastTransition);
   }
 
   private getNextColour(): string {
     return this.cyclicColours.next().value;
   }
+
 }

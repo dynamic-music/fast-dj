@@ -4,6 +4,7 @@ import { DymoGenerator, ExpressionGenerator, DymoManager, DymoStore, uris, UICon
 //export const TRANSITIONS: Map<string,Function> = new Map<string,Function>();
 //TRANSITIONS.set("BeatmatchCrossfade", )
 
+const TRIGGER_DELAY = 3;
 
 export class MixGenerator {
 
@@ -28,11 +29,12 @@ export class MixGenerator {
     return this.mixDymoUri;
   }
 
-  async startMixWithFadeIn(songUri: string, numBars = 8) {
+  async startMixWithFadeIn(songUri: string, numBars = 4) {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     await this.addPartsToMix(newSongBars);
-    let constraints = await this.applyFadeIn(newSongBars.slice(0, numBars));
-    return this.loadAndTriggerTransition(...constraints);
+    let [duration, uris] = await this.applyFadeIn(newSongBars.slice(0, numBars));
+    await this.loadAndTriggerTransition(...uris);
+    return duration + TRIGGER_DELAY;
   }
 
   async direct(songUri: string, offsetBars = 8): Promise<any> {
@@ -66,7 +68,7 @@ export class MixGenerator {
     //return Promise.all(newSongBars.map(p => this.store.setParameter(p, uris.DELAY, 0)));
   }
 
-  async crossfade(songUri: string, numBars = 8, offsetBars = 8) {
+  async crossfade(songUri: string, numBars = 4, offsetBars = 8) {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     newSongBars = newSongBars.slice(offsetBars);
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
@@ -74,11 +76,12 @@ export class MixGenerator {
     let newSongTrans = newSongBars.slice(0, numBars);
     let oldSongTrans = await this.applyAlign(restOfOldSong, newSongTrans);
     await this.addPartsToMix(newSongBars.slice(numBars));
-    let constraints = await this.applyCrossfade(oldSongTrans, newSongTrans);
-    return this.loadAndTriggerTransition(...constraints);
+    let [duration, uris] = await this.applyCrossfade(oldSongTrans, newSongTrans);
+    await this.loadAndTriggerTransition(...uris);
+    return duration + TRIGGER_DELAY;
   }
 
-  async beatmatchCrossfade(songUri: string, numBars = 8, offsetBars = 8) {
+  async beatmatchCrossfade(songUri: string, numBars = 4, offsetBars = 8) {
     let newSongBars = await this.registerSongAndGetBars(songUri)
     newSongBars = newSongBars.slice(offsetBars);
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
@@ -87,9 +90,10 @@ export class MixGenerator {
     let oldSongTrans = await this.applyPairwiseAlign(restOfOldSong, newSongTrans);
     console.log(oldSongTrans.length, newSongTrans.length)
     await this.addPartsToMix(newSongBars.slice(numBars));
-    let uris1 = await this.applyCrossfade(oldSongTrans, newSongTrans);
+    let [duration, uris1] = await this.applyCrossfade(oldSongTrans, newSongTrans);
     let uris2 = await this.applyBeatmatch(oldSongTrans, newSongTrans, uris1[0]);
-    return this.loadAndTriggerTransition(...uris1, ...uris2)
+    await this.loadAndTriggerTransition(...uris1, ...uris2);
+    return duration + TRIGGER_DELAY;
     /*  .then(async () => {
         console.log("triples", await this.store.size());
         console.log("observers", await this.store.getValueObserverCount());
@@ -137,22 +141,22 @@ export class MixGenerator {
     return [tempoTransition, beatMatch, beatMatch2];
   }
 
-  async applyFadeIn(newSongBarsParts: string[]) {
+  async applyFadeIn(newSongBarsParts: string[]): Promise<[number, string[]]> {
     let fadeDuration = await this.getTotalDuration(newSongBarsParts);
     let fadeRamp = await this.generator.addRampControl(0, fadeDuration, 200);
     let fadeIn = await this.makeRampConstraint(fadeRamp, newSongBarsParts, 'Amplitude(d) == r');
     console.log("fading in for", newSongBarsParts.length, "bars ("+fadeDuration+" seconds)")
-    return [fadeRamp, fadeIn]
+    return [fadeDuration, [fadeRamp, fadeIn]]
   }
 
-  async applyCrossfade(oldSongParts: string[], newSongParts: string[]) {
+  async applyCrossfade(oldSongParts: string[], newSongParts: string[]): Promise<[number, string[]]> {
     //this duration calculation works even for tempointerpolated beatmatch!
     let fadeDuration = (await this.getTotalDuration(oldSongParts.concat(newSongParts))/2);
     let fadeRamp = await this.generator.addRampControl(0, fadeDuration, 200);
     let fadeIn = await this.makeRampConstraint(fadeRamp, newSongParts, 'Amplitude(d) == r');
     let fadeOut = await this.makeRampConstraint(fadeRamp, oldSongParts, 'Amplitude(d) == 1-r');
     console.log("crossfading in for", newSongParts.length, "bars (", fadeDuration, "seconds)");
-    return [fadeRamp, fadeIn, fadeOut];
+    return [fadeDuration, [fadeRamp, fadeIn, fadeOut]];
   }
 
   //TODO dymo-core throws the occasional error due to list editing concurrency problem
@@ -202,7 +206,7 @@ export class MixGenerator {
             this.store.deactivateConstraints(this.transitions.slice(-2)[0]);
           //start new transition
           controls.forEach((c:any) => c.startUpdate ? c.startUpdate() : null);
-        }, 3000); //arbitrary time TODO REMOVE ONCE DONE WITH EVENTS!!!
+        }, TRIGGER_DELAY*1000); //arbitrary time TODO REMOVE ONCE DONE WITH EVENTS!!!
       })
   }
 

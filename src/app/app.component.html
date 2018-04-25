@@ -10,9 +10,9 @@
   >
     <h2>{{state.status.type}}</h2>
     <p>{{state.status.message}}</p>
-    <star-rating rating="{{lastTransitionRating}}"
-      labelText="last transition rating" size="large"
-      labelPosition="bottom" staticColor="default" starType="svg">
+    <star-rating [hidden]="!transitionDone" rating="lastTransitionRating"
+      (ratingChange)="onRatingChange($event)" labelText="last transition rating"
+      size="large" labelPosition="bottom" staticColor="default" starType="svg">
     </star-rating>
     <dj-dev-controls *ngIf="state.inDevMode">Text to show</dj-dev-controls>
   </div>

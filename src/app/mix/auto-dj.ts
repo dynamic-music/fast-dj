@@ -58,31 +58,31 @@ export class AutoDj {
     await this.dymoGen.addFeature("key", keys, newDymo);
     /*let allFeatures = this.previousSongs.length > 0 ?
       await this.analyzer.getAllFeatures(_.last(this.previousSongs), newDymo) : null;*/
-    await this.internalTransition(newDymo);
+    let duration = await this.internalTransition(newDymo);
     return Promise.resolve({
       date: new Date(Date.now()),
       user: null,
       rating: null,
       features: null,//allFeatures,
       transition: TransitionType.Crossfade,
-      parameters: []
+      parameters: [],
+      duration: duration
     });
   }
 
-  private internalTransition(newSong: string): Promise<any> {
-    return this.manager.loadFromStore(newSong)
-    .then(async () => {
-      if (this.previousSongs.length > 0) {
-        //await this.startWhicheverTransitionIsBest(newSong);
-        //(this.getRandomTransition())(newDymo);
-        await this.mixGen.beatmatchCrossfade(newSong);
-        console.log("DONE")
-      } else {
-        await this.mixGen.startMixWithFadeIn(newSong);
-      }
-      this.previousSongs.push(newSong);
-    })
-    .then(() => this.keepOnPlaying(this.mixGen.getMixDymo()));
+  private async internalTransition(newSong: string): Promise<number> {
+    await this.manager.loadFromStore(newSong);
+    let duration: number;
+    if (this.previousSongs.length > 0) {
+      //await this.startWhicheverTransitionIsBest(newSong);
+      //(this.getRandomTransition())(newDymo);
+      duration = await this.mixGen.beatmatchCrossfade(newSong);
+    } else {
+      duration = await this.mixGen.startMixWithFadeIn(newSong);
+    }
+    this.previousSongs.push(newSong);
+    this.keepOnPlaying(this.mixGen.getMixDymo());
+    return duration;
   }
 
   private async startWhicheverTransitionIsBest(newSong: string) {

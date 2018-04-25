@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Transition } from './types';
 
 @Injectable()
-export class DbService {
+export class ApiService {
 
   private API_URL = "http://localhost:8060/";//"https://fast-dj-api.herokuapp.com/";//"http://localhost:8060/";
 

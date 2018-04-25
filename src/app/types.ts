@@ -12,5 +12,6 @@ export interface Transition {
   rating: number,
   features: number[],
   transition: TransitionType,
-  parameters: number[]
+  parameters: number[],
+  duration: number
 }
