@@ -1,4 +1,13 @@
+export enum DecisionType {
+  Default,
+  Random,
+  DecisionTree
+}
+
 export enum TransitionType {
+  FadeIn,
+  Direct,
+  BeatRepeat,
   Crossfade,
   Beatmatch,
   BeatmatchMultiple,
@@ -10,8 +19,10 @@ export interface Transition {
   date: Date,
   user: string,
   rating: number,
+  names: string[],
   features: number[],
-  transition: TransitionType,
+  type: TransitionType,
+  decision: DecisionType,
   parameters: number[],
   duration: number
 }

@@ -34,6 +34,7 @@ interface AppState {
 export class AppComponent implements OnInit  {
   private cyclicColours: Iterator<string>;
   private currentState: AppState;
+  private songNames: string[] = [];
   private lastTransition: Transition;
   private lastTransitionRating: number;
   private transitionDone: boolean = false;
@@ -116,16 +117,21 @@ export class AppComponent implements OnInit  {
     this.transitionDone = false;
     this.lastTransitionRating = null;
     const url = URL.createObjectURL(acceptedFile.file);
+    this.songNames.push(acceptedFile.file.name);
     this.message = ("loading "+acceptedFile.file.name).toLowerCase();
     this.lastTransition = await this.dj.transitionToSong(url);
     this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
     console.log("duration", this.lastTransition.duration);
-    setTimeout(() => this.transitionDone = true, this.lastTransition.duration*1000);
+    setTimeout(() => {
+      this.transitionDone = true;
+      this.message = "playing " + acceptedFile.file.name.toLowerCase();
+    }, this.lastTransition.duration*1000 + 1000);
   }
 
   private onRatingChange(event) {
     this.lastTransition.user = getGuid();
     this.lastTransition.rating = event.rating;
+    this.lastTransition.names = this.songNames.slice(-2);
     this.apiService.addTransition(this.lastTransition);
   }
 

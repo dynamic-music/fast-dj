@@ -25,7 +25,8 @@ const TONAL_DISTANCES = {
 
 export class Analyzer {
 
-  //TODO private resultsCache = Map<string,
+  private beatsCache: Map<string, number[]> = new Map<string, number[]>();
+  private keysCache: Map<string, number> = new Map<string, number>();
 
   constructor(private store: DymoStore) {}
 
@@ -55,13 +56,16 @@ export class Analyzer {
   }
 
   async getKey(songUri: string): Promise<number> {
-    let key = await this.store.findFeatureValue(songUri, uris.CONTEXT_URI+"key");
-    return key.length ? key[0] : key;
+    if (!this.keysCache.has(songUri)) {
+      let key = await this.store.findFeatureValue(songUri, uris.CONTEXT_URI+"key");
+      this.keysCache.set(songUri, key.length ? key[0] : key);
+    }
+    return this.keysCache.get(songUri);
   }
 
   async getTempo(songUri: string): Promise<number> {
     const durations = await this.getBeatDurations(songUri);
-    console.log("tempo", 60/math.mean(durations))
+    //console.log("tempo", 60/math.mean(durations))
     return 60/math.mean(durations);
   }
 
@@ -72,7 +76,7 @@ export class Analyzer {
 
   async getTempoRatio(song1Uri: string, song2Uri: string): Promise<number> {
     const tempoRatio = await this.getTempo(song1Uri) / await this.getTempo(song2Uri);
-    console.log("tempo ratio", tempoRatio);
+    //console.log("tempo ratio", tempoRatio);
     return tempoRatio;
   }
 
@@ -96,13 +100,12 @@ export class Analyzer {
   }
 
   private async getBeatDurations(songUri: string): Promise<number[]> {
-    const beats = await this.getBeats(songUri);
-    return await Promise.all(beats.map(b => this.store.findFeatureValue(b, uris.DURATION_FEATURE)));
-  }
-
-  private async getBeats(songUri: string): Promise<string[]> {
-    const bars = await this.store.findParts(songUri);
-    return _.flatten(await Promise.all(bars.map(p => this.store.findParts(p))));
+    if (!this.beatsCache.has(songUri)) {
+      const bars = await this.store.findParts(songUri);
+      const beats = _.flatten(await Promise.all(bars.map(p => this.store.findParts(p))));
+      this.beatsCache.set(songUri, await Promise.all(beats.map(b => this.store.findFeatureValue(b, uris.DURATION_FEATURE))));
+    }
+    return this.beatsCache.get(songUri);
   }
 
 }

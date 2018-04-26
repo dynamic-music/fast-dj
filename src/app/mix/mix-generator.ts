@@ -29,7 +29,7 @@ export class MixGenerator {
     return this.mixDymoUri;
   }
 
-  async startMixWithFadeIn(songUri: string, numBars = 4) {
+  async startMixWithFadeIn(songUri: string, numBars = 3): Promise<number> {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     await this.addPartsToMix(newSongBars);
     let [duration, uris] = await this.applyFadeIn(newSongBars.slice(0, numBars));
@@ -37,19 +37,25 @@ export class MixGenerator {
     return duration + TRIGGER_DELAY;
   }
 
-  async direct(songUri: string, offsetBars = 8): Promise<any> {
-    let newSongBars = await this.registerSongAndGetBars(songUri)
-    newSongBars = newSongBars.slice(offsetBars);
+  async direct(songUri: string, offsetBars = 8): Promise<number> {
+    let newSongBars = await this.registerSongAndGetBars(songUri, offsetBars);
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
     await this.store.removeParts(this.mixDymoUri, currentPos+1);
-    return this.addPartsToMix(newSongBars);
+    await this.addPartsToMix(newSongBars);
+    return TRIGGER_DELAY;
   }
 
-  async powerDown() {
-
+  async beatRepeat(songUri: string, times = 2, offsetBars = 8): Promise<number> {
+    let newSongBars = await this.registerSongAndGetBars(songUri, offsetBars);
+    let currentPos = await this.manager.getPosition(this.mixDymoUri);
+    let oldSongBars = await this.store.removeParts(this.mixDymoUri, currentPos+1);
+    let firstBarBeats = await this.store.findParts(newSongBars[0]);
+    await this.addPartsToMix(_.fill(Array(times), firstBarBeats[0]));
+    await this.addPartsToMix(newSongBars);
+    return 2 + TRIGGER_DELAY; //just an estimate for now
   }
 
-  async echoFreeze(songUri: string, numBarsBreak = 2): Promise<any> {
+  async echoFreeze(songUri: string, numBarsBreak = 1): Promise<number> {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     //remove rest of old song
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
@@ -59,18 +65,52 @@ export class MixGenerator {
     await this.store.setParameter(lastBar, uris.DELAY, 1);
     //add silence for n bars
     let lastBarDuration = await this.store.findFeatureValue(lastBar, uris.DURATION_FEATURE);
-    let emptyBar = await this.generator.addDymo();
-    await this.store.setFeature(emptyBar, uris.DURATION_FEATURE, lastBarDuration);
-    await this.addPartsToMix(_.fill(Array(numBarsBreak), emptyBar));
+    await this.addSilence(lastBarDuration*numBarsBreak);
     //add new song
-    return this.addPartsToMix(newSongBars);
+    await this.addPartsToMix(newSongBars);
+    return lastBarDuration*(numBarsBreak+1) + TRIGGER_DELAY;
     //currently delays need to be initialized for this to work
     //return Promise.all(newSongBars.map(p => this.store.setParameter(p, uris.DELAY, 0)));
   }
 
-  async crossfade(songUri: string, numBars = 4, offsetBars = 8) {
+  async reverbPanDirect(songUri: string, numBars = 5, offsetBars = 8): Promise<number> {
     let newSongBars = await this.registerSongAndGetBars(songUri);
-    newSongBars = newSongBars.slice(offsetBars);
+    //remove rest of old song
+    let currentPos = await this.manager.getPosition(this.mixDymoUri);
+    await this.store.removeParts(this.mixDymoUri, currentPos+numBars);
+    let lastBars = (await this.store.findParts(this.mixDymoUri)).slice(-numBars);
+    //power down last few bars
+    let lastBarDuration = await this.store.findFeatureValue(lastBars[0], uris.DURATION_FEATURE);
+    let effectsDuration = lastBarDuration*numBars;
+    let effectsRamp = await this.generator.addRampControl(0, effectsDuration, 100);
+    let reverb = await this.makeRampConstraint(effectsRamp, lastBars, 'Reverb(d) == r');
+    //add new song
+    await this.addPartsToMix(newSongBars);
+    await this.loadAndTriggerTransition(effectsRamp, reverb);
+    return effectsDuration + TRIGGER_DELAY;
+  }
+
+  async powerDown(songUri: string, numBars = 2, numBarsBreak = 0) {
+    let newSongBars = await this.registerSongAndGetBars(songUri);
+    //remove rest of old song
+    let currentPos = await this.manager.getPosition(this.mixDymoUri);
+    await this.store.removeParts(this.mixDymoUri, currentPos+numBars);
+    let lastBars = (await this.store.findParts(this.mixDymoUri)).slice(-numBars);
+    //power down last few bars
+    let lastBarDuration = await this.store.findFeatureValue(lastBars[0], uris.DURATION_FEATURE);
+    let powerDuration = lastBarDuration*numBars*2;
+    let powerRamp = await this.generator.addRampControl(0, powerDuration, 100);
+    let powerDown = await this.makeRampConstraint(powerRamp, lastBars, 'PlaybackRate(d) == 1-r');
+    //add silence for n bars
+    await this.addSilence(lastBarDuration*numBarsBreak);
+    //add new song
+    await this.addPartsToMix(newSongBars);
+    await this.loadAndTriggerTransition(powerRamp, powerDown);
+    return powerDuration + numBarsBreak + TRIGGER_DELAY;
+  }
+
+  async crossfade(songUri: string, numBars = 4, offsetBars = 8) {
+    let newSongBars = await this.registerSongAndGetBars(songUri, offsetBars);
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
     let restOfOldSong = await this.store.removeParts(this.mixDymoUri, currentPos+1);
     let newSongTrans = newSongBars.slice(0, numBars);
@@ -82,13 +122,11 @@ export class MixGenerator {
   }
 
   async beatmatchCrossfade(songUri: string, numBars = 4, offsetBars = 8) {
-    let newSongBars = await this.registerSongAndGetBars(songUri)
-    newSongBars = newSongBars.slice(offsetBars);
+    let newSongBars = await this.registerSongAndGetBars(songUri, offsetBars);
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
     let restOfOldSong = await this.store.removeParts(this.mixDymoUri, currentPos+1);
     let newSongTrans = newSongBars.slice(0, numBars);
     let oldSongTrans = await this.applyPairwiseAlign(restOfOldSong, newSongTrans);
-    console.log(oldSongTrans.length, newSongTrans.length)
     await this.addPartsToMix(newSongBars.slice(numBars));
     let [duration, uris1] = await this.applyCrossfade(oldSongTrans, newSongTrans);
     let uris2 = await this.applyBeatmatch(oldSongTrans, newSongTrans, uris1[0]);
@@ -102,6 +140,14 @@ export class MixGenerator {
 
   async addPartsToMix(parts: string[]) {
     return Promise.all(parts.map(p => this.store.addPart(this.mixDymoUri, p)));
+  }
+
+  async addSilence(duration: number) {
+    if (duration > 0) {
+      let silence = await this.generator.addDymo();
+      await this.store.setFeature(silence, uris.DURATION_FEATURE, duration);
+      await this.addPartsToMix([silence]);
+    }
   }
 
   //returns uris of parts of old song that are part of transition
@@ -143,7 +189,7 @@ export class MixGenerator {
 
   async applyFadeIn(newSongBarsParts: string[]): Promise<[number, string[]]> {
     let fadeDuration = await this.getTotalDuration(newSongBarsParts);
-    let fadeRamp = await this.generator.addRampControl(0, fadeDuration, 200);
+    let fadeRamp = await this.generator.addRampControl(0, fadeDuration, 100);
     let fadeIn = await this.makeRampConstraint(fadeRamp, newSongBarsParts, 'Amplitude(d) == r');
     console.log("fading in for", newSongBarsParts.length, "bars ("+fadeDuration+" seconds)")
     return [fadeDuration, [fadeRamp, fadeIn]]
@@ -152,7 +198,7 @@ export class MixGenerator {
   async applyCrossfade(oldSongParts: string[], newSongParts: string[]): Promise<[number, string[]]> {
     //this duration calculation works even for tempointerpolated beatmatch!
     let fadeDuration = (await this.getTotalDuration(oldSongParts.concat(newSongParts))/2);
-    let fadeRamp = await this.generator.addRampControl(0, fadeDuration, 200);
+    let fadeRamp = await this.generator.addRampControl(0, fadeDuration, 100);
     let fadeIn = await this.makeRampConstraint(fadeRamp, newSongParts, 'Amplitude(d) == r');
     let fadeOut = await this.makeRampConstraint(fadeRamp, oldSongParts, 'Amplitude(d) == 1-r');
     console.log("crossfading in for", newSongParts.length, "bars (", fadeDuration, "seconds)");
@@ -210,9 +256,10 @@ export class MixGenerator {
       })
   }
 
-  private registerSongAndGetBars(songUri: string): Promise<string[]> {
+  private async registerSongAndGetBars(songUri: string, offset = 0): Promise<string[]> {
     this.songs.push(songUri);
-    return this.store.findParts(songUri);
+    let bars = await this.store.findParts(songUri);
+    return bars.slice(offset);
   }
 
   private async makeCrossfade(rampUri: string, oldSongUris: string[], newSongUris: string[]): Promise<string[]> {
