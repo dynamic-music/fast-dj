@@ -5,20 +5,9 @@ html, body {
   padding: 0;
 }
 
-@import "assets/star-rating.css";
-
 :focus {outline:0 !important;}
 
-.rating.color-default .star-container .star {
-  svg {
-    fill: #000;
-  }
-  i {
-    color: #000;
-  }
-}
-
-.star.large, .rating.large .star {
-    width: 70px;
-    height: 70px;
-}
+$color-default-rating: #000 !default;
+$large-star-width: 70px !default;
+$large-star-height: 67px !default;
+@import "~css-star-rating/scss/star-rating.scss";

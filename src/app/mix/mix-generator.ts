@@ -90,7 +90,7 @@ export class MixGenerator {
     return effectsDuration + TRIGGER_DELAY;
   }
 
-  async powerDown(songUri: string, numBars = 2, numBarsBreak = 0) {
+  async powerDown(songUri: string, numBars = 3, numBarsBreak = 0) {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     //remove rest of old song
     let currentPos = await this.manager.getPosition(this.mixDymoUri);

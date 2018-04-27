@@ -66,12 +66,12 @@ export class AutoDj {
 
   private async internalTransition(newSong: string): Promise<Transition> {
     await this.manager.loadFromStore(newSong);
-    let transition;// = this.defaultTransition(newSong);
-    if (Math.random() > 0.5) {
+    let transition = this.defaultTransition(newSong);
+    /*if (Math.random() > 0.5) {
       transition = this.randomTransition(newSong);
     } else {
       transition = this.startWhicheverTransitionIsBest(newSong);
-    }
+    }*/
     this.previousSongs.push(newSong);
     this.keepOnPlaying(this.mixGen.getMixDymo());
     return transition;
@@ -84,7 +84,7 @@ export class AutoDj {
       //await this.startWhicheverTransitionIsBest(newSong);
       //(this.getRandomTransition())(newDymo);
       transition.type = TransitionType.BeatRepeat;
-      transition.duration = await this.mixGen.reverbPanDirect(newSong);
+      transition.duration = await this.mixGen.beatRepeat(newSong);
     } else {
       transition.type = TransitionType.FadeIn;
       transition.duration = await this.mixGen.startMixWithFadeIn(newSong);

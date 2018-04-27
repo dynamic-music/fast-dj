@@ -64,7 +64,7 @@ export class FeatureExtractionService {
     return this.client.collect(request);
   }
 
-  private extractQmFeature(buffer: AudioBuffer, feature: QmExtractor): Promise<FeatureList> {
+  private extractQmFeature(buffer: AudioBuffer, feature: QmExtractor): Promise<any> {
     const {channels, sampleRate} = bufferToAudioData(buffer);
     return this.extract({
       audioData: channels,

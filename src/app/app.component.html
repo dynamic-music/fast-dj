@@ -15,7 +15,7 @@
     <star-rating  [rating]="lastTransitionRating"
       (ratingChange)="lastTransitionRating = $event.rating"
       (starClickChange)="onRatingChange($event)"
-      [hidden]="!transitionDone || ratingDone" labelText="last transition rating"
+       labelText="last transition rating"
       size="large" labelPosition="bottom" staticColor="default" starType="svg">
     </star-rating>
     <p [hidden]="!ratingDone">drop more audio</p>
