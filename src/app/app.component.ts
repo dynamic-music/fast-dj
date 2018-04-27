@@ -36,8 +36,9 @@ export class AppComponent implements OnInit  {
   private currentState: AppState;
   private songNames: string[] = [];
   private lastTransition: Transition;
-  private lastTransitionRating: number;
+  private lastTransitionRating: number = 0;
   private transitionDone: boolean = false;
+  private ratingDone: boolean = false;
   private dj: AutoDj;
 
   private get state(): AppState {
@@ -84,14 +85,14 @@ export class AppComponent implements OnInit  {
       inDevMode: false,
       status: {
         type: 'INITIALISING',
-        message: 'Loading',
+        message: 'loading',
         colour: this.getNextColour()
       }
     };
     this.dj = new AutoDj(null, this.extractionService);
     this.dj.init().then(() => {
       this.status =  'READY';
-      this.message = 'Drop audio here'
+      this.message = 'drop audio here'
     });
   }
 
@@ -114,25 +115,32 @@ export class AppComponent implements OnInit  {
   }
 
   private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
-    this.transitionDone = false;
-    this.lastTransitionRating = null;
-    const url = URL.createObjectURL(acceptedFile.file);
-    this.songNames.push(acceptedFile.file.name);
-    this.message = ("loading "+acceptedFile.file.name).toLowerCase();
-    this.lastTransition = await this.dj.transitionToSong(url);
-    this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
-    console.log("duration", this.lastTransition.duration);
-    setTimeout(() => {
-      this.transitionDone = true;
-      this.message = "playing " + acceptedFile.file.name.toLowerCase();
-    }, this.lastTransition.duration*1000 + 1000);
+    if (this.ratingDone || this.state.status.type === 'READY') {
+      this.transitionDone = false;
+      this.ratingDone = false;
+      this.lastTransitionRating = 0;
+      const url = URL.createObjectURL(acceptedFile.file);
+      this.songNames.push(acceptedFile.file.name);
+      this.message = ("checking out "+acceptedFile.file.name).toLowerCase();
+      this.lastTransition = await this.dj.transitionToSong(url);
+      this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
+      console.log("duration", this.lastTransition.duration);
+      //when transition done:
+      setTimeout(() => {
+        this.transitionDone = true;
+        this.message = "playing " + acceptedFile.file.name.toLowerCase();
+      }, this.lastTransition.duration*1000 + 1000);
+    }
   }
 
   private onRatingChange(event) {
-    this.lastTransition.user = getGuid();
-    this.lastTransition.rating = event.rating;
-    this.lastTransition.names = this.songNames.slice(-2);
-    this.apiService.addTransition(this.lastTransition);
+    if (this.lastTransition) {
+      this.lastTransition.user = getGuid();
+      this.lastTransition.rating = event.rating;
+      this.lastTransition.names = this.songNames.slice(-2);
+      this.apiService.addTransition(this.lastTransition);
+      setTimeout(() => this.ratingDone = true, 2000);
+    }
   }
 
   private getNextColour(): string {

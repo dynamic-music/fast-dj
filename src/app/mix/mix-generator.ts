@@ -73,7 +73,7 @@ export class MixGenerator {
     //return Promise.all(newSongBars.map(p => this.store.setParameter(p, uris.DELAY, 0)));
   }
 
-  async reverbPanDirect(songUri: string, numBars = 5, offsetBars = 8): Promise<number> {
+  async reverbPanDirect(songUri: string, numBars = 3, offsetBars = 8): Promise<number> {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     //remove rest of old song
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
@@ -83,7 +83,7 @@ export class MixGenerator {
     let lastBarDuration = await this.store.findFeatureValue(lastBars[0], uris.DURATION_FEATURE);
     let effectsDuration = lastBarDuration*numBars;
     let effectsRamp = await this.generator.addRampControl(0, effectsDuration, 100);
-    let reverb = await this.makeRampConstraint(effectsRamp, lastBars, 'Reverb(d) == r');
+    let reverb = await this.makeRampConstraint(effectsRamp, lastBars, 'Reverb(d) == 2*r');
     //add new song
     await this.addPartsToMix(newSongBars);
     await this.loadAndTriggerTransition(effectsRamp, reverb);

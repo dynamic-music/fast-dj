@@ -8,12 +8,17 @@
     [ngClass]="{beat: state.status.type === 'SPINNING', 'status-indicator': true}"
     [style.backgroundColor]="state.status.colour"
   >
+    <h1>FAST DJ</h1>
     <h2>{{state.status.type}}</h2>
     <p>{{state.status.message}}</p>
-    <star-rating [hidden]="!transitionDone" rating="lastTransitionRating"
-      (ratingChange)="onRatingChange($event)" labelText="last transition rating"
+    <!--[hidden]="!transitionDone || ratingDone"-->
+    <star-rating  [rating]="lastTransitionRating"
+      (ratingChange)="lastTransitionRating = $event.rating"
+      (starClickChange)="onRatingChange($event)"
+      [hidden]="!transitionDone || ratingDone" labelText="last transition rating"
       size="large" labelPosition="bottom" staticColor="default" starType="svg">
     </star-rating>
+    <p [hidden]="!ratingDone">drop more audio</p>
     <dj-dev-controls *ngIf="state.inDevMode">Text to show</dj-dev-controls>
   </div>
 </div>

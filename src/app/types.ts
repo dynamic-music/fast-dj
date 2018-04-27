@@ -12,7 +12,8 @@ export enum TransitionType {
   Beatmatch,
   BeatmatchMultiple,
   EchoFreeze,
-  PowerDown
+  PowerDown,
+  Effects
 }
 
 export interface Transition {
