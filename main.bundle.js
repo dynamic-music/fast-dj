@@ -28,7 +28,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 var ApiService = (function () {
     function ApiService() {
-        this.API_URL = "https://fast-dj-api.herokuapp.com/"; //"http://localhost:8060/";
+        this.API_URL = "https://fast-dj.herokuapp.com/"; //"http://localhost:8060/";
     }
     ApiService.prototype.addTransition = function (transition) {
         //TODO ADD TIME!!!!!!!!!
