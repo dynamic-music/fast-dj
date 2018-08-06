@@ -89,11 +89,6 @@ export class AppComponent implements OnInit  {
         colour: this.getNextColour()
       }
     };
-    this.dj = new AutoDj(null, this.extractionService);
-    this.dj.init().then(() => {
-      this.status =  'READY';
-      this.message = 'drop audio here'
-    });
   }
 
   async ngOnInit() {
@@ -107,11 +102,15 @@ export class AppComponent implements OnInit  {
     })
     .subscribe();
 
-    (await this.dj.getBeatObservable())
-    .subscribe(b => {
-      this.status = this.state.status.type === "SPINNING" ?
-        "spinning" : "SPINNING";
-    })
+    this.dj = new AutoDj(null, this.extractionService);
+    await this.dj.init();
+    this.status = 'READY';
+    this.message = 'drop audio here';
+    this.dj.getBeatObservable()
+      .subscribe(b => {
+        this.status = this.state.status.type === "SPINNING" ?
+          "spinning" : "SPINNING";
+      })
   }
 
   private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {

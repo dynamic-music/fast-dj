@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as math from 'mathjs';
-import { DymoStore, uris } from 'dymo-core';
+import { SuperDymoStore, uris } from 'dymo-core';
 
 export interface Pair<T> {
   first: T,
@@ -28,7 +28,7 @@ export class Analyzer {
   private beatsCache: Map<string, number[]> = new Map<string, number[]>();
   private keysCache: Map<string, number> = new Map<string, number>();
 
-  constructor(private store: DymoStore) {}
+  constructor(private store: SuperDymoStore) {}
 
   async getAllFeatures(song1: string, song2: string): Promise<number[]> {
     return [

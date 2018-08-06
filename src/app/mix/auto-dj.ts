@@ -1,46 +1,39 @@
 import { Observable } from 'rxjs/Observable';
 import * as _ from 'lodash';
-import { DymoGenerator, DymoTemplates, DymoManager, GlobalVars, DymoStore, uris, globals } from 'dymo-core';
+import { DymoPlayerManager } from 'dymo-player';
+import { DymoGenerator, DymoTemplates, SuperDymoStore, globals } from 'dymo-core';
 import { MixGenerator } from './mix-generator';
 import { Transition, TransitionType, DecisionType } from '../types';
 import { FeatureExtractionService } from '../feature-extraction.service';
 import { Analyzer } from './analyzer';
-import * as d from './decision-tree';
 
 export class AutoDj {
 
-  private store: DymoStore;
+  private store: SuperDymoStore;
   private analyzer: Analyzer;
   private dymoGen: DymoGenerator;
   private mixGen: MixGenerator;
-  private manager: DymoManager;
+  private player: DymoPlayerManager;
   private previousPlayingDymos = [];
   private previousSongs = [];
   private isPlaying;
 
   constructor(private featureApi: string, private extractionService: FeatureExtractionService) {
-    //d;
-    this.manager = new DymoManager(
-      undefined,
-      1,
-      null,
-      null,
-      'https://dynamic-music.github.io/dymo-core/audio/impulse_rev.wav'
-    );
+    this.player = new DymoPlayerManager(true, false, 1, 3);
   }
 
   init(): Promise<any> {
-    return this.manager.init('https://raw.githubusercontent.com/dynamic-music/dymo-core/master/ontologies/')//'https://dynamic-music.github.io/dymo-core/ontologies/')
+    return this.player.init('https://raw.githubusercontent.com/dynamic-music/dymo-core/master/ontologies/')//'https://dynamic-music.github.io/dymo-core/ontologies/')
       .then(() => {
-        this.store = this.manager.getStore();
+        this.store = this.player.getDymoManager().getStore();
         this.dymoGen = new DymoGenerator(this.store);
-        this.mixGen = new MixGenerator(this.dymoGen, this.manager);
+        this.mixGen = new MixGenerator(this.dymoGen, this.player);
         this.analyzer = new Analyzer(this.store);
       });
   }
 
   getBeatObservable(): Observable<any> {
-    return (this.manager.getPlayingDymoUris())
+    return (this.player.getPlayingDymoUris())
       .filter(playingDymos => {
         // TODO identify which track is playing, and associate with a specific colour
        const nChanged = _.difference(playingDymos, this.previousPlayingDymos).length;
@@ -50,7 +43,7 @@ export class AutoDj {
   }
 
   async transitionToSong(audioUri: string): Promise<Transition> {
-    let buffer = await (await this.manager.getAudioBank()).getAudioBuffer(audioUri);
+    let buffer = await (await this.player.getAudioBank()).getAudioBuffer(audioUri);
     let beats = await this.extractionService.extractBeats(buffer);
     let newSong = await DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats);
     let keys = await this.extractionService.extractKey(buffer);
@@ -65,7 +58,7 @@ export class AutoDj {
   }
 
   private async internalTransition(newSong: string): Promise<Transition> {
-    await this.manager.loadFromStore(newSong);
+    await this.player.getDymoManager().loadFromStore(newSong);
     let transition// = this.defaultTransition(newSong);
     if (Math.random() > 0.5) {
       transition = this.randomTransition(newSong);
@@ -195,7 +188,7 @@ export class AutoDj {
 
   private keepOnPlaying(dymoUri: string) {
     if (!this.isPlaying) {
-      this.manager.startPlayingUri(dymoUri);
+      this.player.playUri(dymoUri);
       this.isPlaying = true;
     }
   }
