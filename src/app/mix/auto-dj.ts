@@ -66,12 +66,12 @@ export class AutoDj {
 
   private async internalTransition(newSong: string): Promise<Transition> {
     await this.manager.loadFromStore(newSong);
-    let transition = this.defaultTransition(newSong);
-    /*if (Math.random() > 0.5) {
+    let transition// = this.defaultTransition(newSong);
+    if (Math.random() > 0.5) {
       transition = this.randomTransition(newSong);
     } else {
       transition = this.startWhicheverTransitionIsBest(newSong);
-    }*/
+    }
     this.previousSongs.push(newSong);
     this.keepOnPlaying(this.mixGen.getMixDymo());
     return transition;
@@ -145,12 +145,22 @@ export class AutoDj {
           this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatch(newSong);
         }*/ else if (await this.analyzer.getKeyDistance(newSong, previousSong) <= 2) {
           console.log("key similar")
-          transition.type = TransitionType.EchoFreeze;
-          transition.duration = await this.mixGen.echoFreeze(newSong);
+          if (Math.random() > 0.5) {
+            transition.type = TransitionType.Effects;
+            transition.duration = await this.mixGen.reverbPanDirect(newSong);
+          } else {
+            transition.type = TransitionType.EchoFreeze;
+            transition.duration = await this.mixGen.echoFreeze(newSong);
+          }
         } else {
           console.log("give up")
-          transition.type = TransitionType.PowerDown;
-          transition.duration = await this.mixGen.powerDown(newSong);
+          if (Math.random() > 0.5) {
+            transition.type = TransitionType.Effects;
+            transition.duration = await this.mixGen.beatRepeat(newSong);
+          } else {
+            transition.type = TransitionType.PowerDown;
+            transition.duration = await this.mixGen.powerDown(newSong);
+          }
         }
       } else if (await this.analyzer.getKeyDistance(newSong, previousSong) <= 2) {
         console.log("key similar")
@@ -158,8 +168,13 @@ export class AutoDj {
         transition.duration = await this.mixGen.echoFreeze(newSong);
       } else {
         console.log("give up")
-        transition.type = TransitionType.PowerDown;
-        transition.duration = await this.mixGen.powerDown(newSong);
+        if (Math.random() > 0.5) {
+          transition.type = TransitionType.Effects;
+          transition.duration = await this.mixGen.beatRepeat(newSong);
+        } else {
+          transition.type = TransitionType.PowerDown;
+          transition.duration = await this.mixGen.powerDown(newSong);
+        }
       }
     }
     return transition;
@@ -169,7 +184,7 @@ export class AutoDj {
     let transitions: [Function, TransitionType][] = [
       [(newDymo: string) => this.mixGen.beatmatchCrossfade(newDymo), TransitionType.Beatmatch],
       [(newDymo: string) => this.mixGen.echoFreeze(newDymo), TransitionType.EchoFreeze],
-      [(newDymo: string) => this.mixGen.direct(newDymo), TransitionType.Direct],
+      [(newDymo: string) => this.mixGen.direct(newDymo), TransitionType.Slam],
       [(newDymo: string) => this.mixGen.beatRepeat(newDymo), TransitionType.BeatRepeat],
       [(newDymo: string) => this.mixGen.crossfade(newDymo), TransitionType.Crossfade],
       [(newDymo: string) => this.mixGen.powerDown(newDymo), TransitionType.PowerDown],

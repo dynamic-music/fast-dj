@@ -6,7 +6,7 @@ export enum DecisionType {
 
 export enum TransitionType {
   FadeIn,
-  Direct,
+  Slam,
   BeatRepeat,
   Crossfade,
   Beatmatch,

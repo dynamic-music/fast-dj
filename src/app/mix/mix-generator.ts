@@ -49,6 +49,14 @@ export class MixGenerator {
     let newSongBars = await this.registerSongAndGetBars(songUri, offsetBars);
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
     let oldSongBars = await this.store.removeParts(this.mixDymoUri, currentPos+1);
+    //add reverb to last bar
+    let lastBar = await this.store.findPartAt(this.mixDymoUri, currentPos);
+    let lastBeat = await this.store.findPartAt(lastBar, 3);
+    await this.store.setParameter(lastBeat, uris.REVERB, 0.5);
+    //add silence for first part of bar
+    let lastBarDuration = await this.store.findFeatureValue(oldSongBars[0], uris.DURATION_FEATURE);
+    await this.addSilence(lastBarDuration/2);
+    //beat repeat
     let firstBarBeats = await this.store.findParts(newSongBars[0]);
     await this.addPartsToMix(_.fill(Array(times), firstBarBeats[0]));
     await this.addPartsToMix(newSongBars);
@@ -83,14 +91,14 @@ export class MixGenerator {
     let lastBarDuration = await this.store.findFeatureValue(lastBars[0], uris.DURATION_FEATURE);
     let effectsDuration = lastBarDuration*numBars;
     let effectsRamp = await this.generator.addRampControl(0, effectsDuration, 100);
-    let reverb = await this.makeRampConstraint(effectsRamp, lastBars, 'Reverb(d) == 2*r');
+    let reverb = await this.makeRampConstraint(effectsRamp, lastBars, 'Reverb(d) == r');
     //add new song
     await this.addPartsToMix(newSongBars);
     await this.loadAndTriggerTransition(effectsRamp, reverb);
     return effectsDuration + TRIGGER_DELAY;
   }
 
-  async powerDown(songUri: string, numBars = 3, numBarsBreak = 0) {
+  async powerDown(songUri: string, numBars = 2, numBarsBreak = 0) {
     let newSongBars = await this.registerSongAndGetBars(songUri);
     //remove rest of old song
     let currentPos = await this.manager.getPosition(this.mixDymoUri);
@@ -101,11 +109,13 @@ export class MixGenerator {
     let powerDuration = lastBarDuration*numBars*2;
     let powerRamp = await this.generator.addRampControl(0, powerDuration, 100);
     let powerDown = await this.makeRampConstraint(powerRamp, lastBars, 'PlaybackRate(d) == 1-r');
+    let powerDown2 = await this.makeSetsConstraint(
+      [['d',lastBars]], 'DurationRatio(d) == 1/PlaybackRate(d)');
     //add silence for n bars
     await this.addSilence(lastBarDuration*numBarsBreak);
     //add new song
     await this.addPartsToMix(newSongBars);
-    await this.loadAndTriggerTransition(powerRamp, powerDown);
+    await this.loadAndTriggerTransition(powerRamp, powerDown, powerDown2);
     return powerDuration + numBarsBreak + TRIGGER_DELAY;
   }
 
@@ -182,7 +192,7 @@ export class MixGenerator {
     let beatMatch = await this.makeSetsConstraint(
       [['d',beats], ['t',[tempoParam]]], 'PlaybackRate(d) == t/60*DurationFeature(d)');
     let beatMatch2 = await this.makeSetsConstraint(
-      [['d',beats], ['t',[tempoParam]]], 'DurationRatio(d) == 1/PlaybackRate(d)');
+      [['d',beats]], 'DurationRatio(d) == 1/PlaybackRate(d)');
     console.log("beatmatched between tempos", oldTempo, newTempo);
     return [tempoTransition, beatMatch, beatMatch2];
   }

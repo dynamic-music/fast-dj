@@ -4,7 +4,7 @@ import { Transition } from './types';
 @Injectable()
 export class ApiService {
 
-  private API_URL = "http://localhost:8060/";//"https://fast-dj-api.herokuapp.com/";//"http://localhost:8060/";
+  private API_URL = "https://fast-dj.herokuapp.com/";//"http://localhost:8060/";
 
   addTransition(transition: Transition) {
     //TODO ADD TIME!!!!!!!!!

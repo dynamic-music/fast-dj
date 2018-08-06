@@ -12,7 +12,8 @@
     <h2>{{state.status.type}}</h2>
     <p>{{state.status.message}}</p>
     <!--[hidden]="!transitionDone || ratingDone"-->
-    <star-rating  [rating]="lastTransitionRating"
+    <star-rating [hidden]="!transitionDone || ratingDone"
+      [rating]="lastTransitionRating"
       (ratingChange)="lastTransitionRating = $event.rating"
       (starClickChange)="onRatingChange($event)"
        labelText="last transition rating"
