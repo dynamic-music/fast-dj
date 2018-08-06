@@ -5,9 +5,10 @@ import {
   OneShotExtractionResponse as Response,
   OneShotExtractionScheme
 } from 'piper-js/one-shot';
-import { FeatureList } from 'piper-js/core';
+//import { FeatureList } from 'piper-js/core';
 import { toSeconds } from 'piper-js/time';
 import createQmWorker from '@extractors/qm';
+import { FeatureExtractor, Beat, Key } from './mix/types';
 
 // this spawns a web worker, which we only want to do once
 // so we instantiate
@@ -16,18 +17,6 @@ const qmWorker = createQmWorker();
 export interface QmExtractor {
   key: string,
   outputId: string
-}
-
-export interface Value<T> {
-  value: T;
-}
-export interface Beat {
-  time: Value<number>;
-  label: Value<string>;
-}
-export interface Key {
-  time: Value<number>;
-  value: number;
 }
 
 interface AudioData {
@@ -50,7 +39,7 @@ function bufferToAudioData(buffer: AudioBuffer): AudioData {
 }
 
 @Injectable()
-export class FeatureExtractionService {
+export class FeatureExtractionService implements FeatureExtractor {
   private client: OneShotExtractionClient;
 
   constructor() {

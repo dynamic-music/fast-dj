@@ -1,10 +1,9 @@
 import { Observable } from 'rxjs/Observable';
 import * as _ from 'lodash';
-import { DymoPlayerManager } from 'dymo-player';
+import { DymoPlayer } from 'dymo-player';
 import { DymoGenerator, DymoTemplates, SuperDymoStore, globals } from 'dymo-core';
 import { MixGenerator } from './mix-generator';
-import { Transition, TransitionType, DecisionType } from '../types';
-import { FeatureExtractionService } from '../feature-extraction.service';
+import { FeatureExtractor, Transition, TransitionType, DecisionType } from './types';
 import { Analyzer } from './analyzer';
 
 export class AutoDj {
@@ -13,13 +12,14 @@ export class AutoDj {
   private analyzer: Analyzer;
   private dymoGen: DymoGenerator;
   private mixGen: MixGenerator;
-  private player: DymoPlayerManager;
+  private player: DymoPlayer;
   private previousPlayingDymos = [];
   private previousSongs = [];
   private isPlaying;
 
-  constructor(private featureApi: string, private extractionService: FeatureExtractionService) {
-    this.player = new DymoPlayerManager(true, false, 1, 3);
+  //TODO AT SOME POINT IN THE FUTURE WE MAY HAVE AN API WITH SOME FEATURES
+  constructor(private featureApi: string, private featureExtractor: FeatureExtractor) {
+    this.player = new DymoPlayer(true, false, 1, 3);
   }
 
   init(): Promise<any> {
@@ -44,10 +44,10 @@ export class AutoDj {
 
   async transitionToSong(audioUri: string): Promise<Transition> {
     let buffer = await (await this.player.getAudioBank()).getAudioBuffer(audioUri);
-    let beats = await this.extractionService.extractBeats(buffer);
+    let beats = await this.featureExtractor.extractBeats(buffer);
     let newSong = await DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats);
-    let keys = await this.extractionService.extractKey(buffer);
-    this.dymoGen.setSummarizingMode(globals.SUMMARY.MODE)
+    let keys = await this.featureExtractor.extractKey(buffer);
+    this.dymoGen.setSummarizingMode(globals.SUMMARY.MODE);
     await this.dymoGen.addFeature("key", keys, newSong);
     let oldSong = _.last(this.previousSongs);
     let transition = await this.internalTransition(newSong);

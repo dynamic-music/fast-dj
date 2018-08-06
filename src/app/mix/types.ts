@@ -1,3 +1,22 @@
+export interface Value<T> {
+  value: T;
+}
+
+export interface Beat {
+  time: Value<number>;
+  label: Value<string>;
+}
+
+export interface Key {
+  time: Value<number>;
+  value: number;
+}
+
+export interface FeatureExtractor {
+  extractBeats(buffer: AudioBuffer): Promise<Beat[]>;
+  extractKey(buffer: AudioBuffer): Promise<Key[]>;
+}
+
 export enum DecisionType {
   Default,
   Random,

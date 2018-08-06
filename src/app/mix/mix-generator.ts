@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { DymoPlayerManager } from 'dymo-player';
+import { DymoPlayer } from 'dymo-player';
 import { DymoGenerator, ExpressionGenerator, SuperDymoStore, uris } from 'dymo-core';
 
 //export const TRANSITIONS: Map<string,Function> = new Map<string,Function>();
@@ -15,7 +15,7 @@ export class MixGenerator {
   private store: SuperDymoStore;
   private expressionGen: ExpressionGenerator;
 
-  constructor(private generator: DymoGenerator, private player: DymoPlayerManager) {
+  constructor(private generator: DymoGenerator, private player: DymoPlayer) {
     this.store = generator.getStore();
     this.expressionGen = new ExpressionGenerator(this.store);
     this.init();

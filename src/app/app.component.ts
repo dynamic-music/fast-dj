@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from './api.service';
 import { FeatureExtractionService } from './feature-extraction.service';
 import { getGuid } from './util';
-import { Transition } from './types';
+import { Transition } from './mix/types';
 import { AutoDj } from './mix/auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
@@ -114,7 +114,7 @@ export class AppComponent implements OnInit  {
   }
 
   private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
-    if (this.ratingDone || this.state.status.type === 'READY') {
+    //TODO RECATIVATE!!! if (this.ratingDone || this.state.status.type === 'READY') {
       this.transitionDone = false;
       this.ratingDone = false;
       this.lastTransitionRating = 0;
@@ -130,7 +130,7 @@ export class AppComponent implements OnInit  {
         this.message = "playing " + acceptedFile.file.name.toLowerCase();
       }, this.lastTransition.duration*1000 + 1000);
     }
-  }
+  //}
 
   private onRatingChange(event) {
     if (this.lastTransition) {

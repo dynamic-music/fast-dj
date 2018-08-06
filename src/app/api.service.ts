@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Transition } from './types';
+import { Transition } from './mix/types';
 
 @Injectable()
 export class ApiService {
