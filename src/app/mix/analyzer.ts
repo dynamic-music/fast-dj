@@ -27,6 +27,7 @@ export class Analyzer {
 
   private beatsCache: Map<string, number[]> = new Map<string, number[]>();
   private keysCache: Map<string, number> = new Map<string, number>();
+  private tempoCache: Map<string, number> = new Map<string, number>();
 
   constructor(private store: SuperDymoStore) {}
 
@@ -64,9 +65,11 @@ export class Analyzer {
   }
 
   async getTempo(songUri: string): Promise<number> {
-    const durations = await this.getBeatDurations(songUri);
-    //console.log("tempo", 60/math.mean(durations))
-    return 60/math.mean(durations);
+    if (!this.tempoCache.has(songUri)) {
+      const durations = await this.getBeatDurations(songUri);
+      this.tempoCache.set(songUri, 60/math.mean(durations));
+    }
+    return this.tempoCache.get(songUri);
   }
 
   async getTempoMultiple(song1Uri: string, song2Uri: string): Promise<number> {
@@ -103,9 +106,14 @@ export class Analyzer {
     if (!this.beatsCache.has(songUri)) {
       const bars = await this.store.findParts(songUri);
       const beats = _.flatten(await Promise.all(bars.map(p => this.store.findParts(p))));
-      this.beatsCache.set(songUri, await Promise.all(beats.map(b => this.store.findFeatureValue(b, uris.DURATION_FEATURE))));
+      const durations = await Promise.all<number>(beats.map(b => this.findDuration(b)));
+      this.beatsCache.set(songUri, durations);
     }
     return this.beatsCache.get(songUri);
+  }
+
+  private async findDuration(dymo: string): Promise<number> {
+    return <number>(await this.store.findFeatureValue(dymo, uris.DURATION_FEATURE));
   }
 
 }

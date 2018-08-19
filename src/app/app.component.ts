@@ -114,7 +114,7 @@ export class AppComponent implements OnInit  {
   }
 
   private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
-    //TODO RECATIVATE!!! if (this.ratingDone || this.state.status.type === 'READY') {
+    //TODO RECATIVATE MANDATORY RATING!!! if (this.ratingDone || this.state.status.type === 'READY') {
       this.transitionDone = false;
       this.ratingDone = false;
       this.lastTransitionRating = 0;
@@ -123,12 +123,11 @@ export class AppComponent implements OnInit  {
       this.message = ("checking out "+acceptedFile.file.name).toLowerCase();
       this.lastTransition = await this.dj.transitionToSong(url);
       this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
-      console.log("duration", this.lastTransition.duration);
       //when transition done:
       setTimeout(() => {
         this.transitionDone = true;
         this.message = "playing " + acceptedFile.file.name.toLowerCase();
-      }, this.lastTransition.duration*1000 + 1000);
+      }, this.lastTransition.duration*1000 + 3000);
     }
   //}
 

@@ -15,18 +15,17 @@ export class AutoDj {
   private player: DymoPlayer;
   private previousPlayingDymos = [];
   private previousSongs = [];
-  private isPlaying;
 
   //TODO AT SOME POINT IN THE FUTURE WE MAY HAVE AN API WITH SOME FEATURES
   constructor(private featureApi: string, private featureExtractor: FeatureExtractor) {
-    this.player = new DymoPlayer(true, false, 1, 3);
+    this.player = new DymoPlayer(true, false, 0.5, 2)//, undefined, undefined, true);
   }
 
   init(): Promise<any> {
     return this.player.init('https://raw.githubusercontent.com/dynamic-music/dymo-core/master/ontologies/')//'https://dynamic-music.github.io/dymo-core/ontologies/')
       .then(() => {
         this.store = this.player.getDymoManager().getStore();
-        this.dymoGen = new DymoGenerator(this.store);
+        this.dymoGen = new DymoGenerator(false, this.store);
         this.mixGen = new MixGenerator(this.dymoGen, this.player);
         this.analyzer = new Analyzer(this.store);
       });
@@ -45,84 +44,71 @@ export class AutoDj {
   async transitionToSong(audioUri: string): Promise<Transition> {
     let buffer = await (await this.player.getAudioBank()).getAudioBuffer(audioUri);
     let beats = await this.featureExtractor.extractBeats(buffer);
+    //drop initial and final incomplete bars
+    beats = _.dropWhile(beats, b => b.label.value !== "1");
+    beats = _.dropRightWhile(beats, b => b.label.value !== "4");
     let newSong = await DymoTemplates.createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats);
+    let oldSong = this.previousSongs.length ? _.last(this.previousSongs) : undefined;
     let keys = await this.featureExtractor.extractKey(buffer);
     this.dymoGen.setSummarizingMode(globals.SUMMARY.MODE);
     await this.dymoGen.addFeature("key", keys, newSong);
-    let oldSong = _.last(this.previousSongs);
     let transition = await this.internalTransition(newSong);
-    if (this.previousSongs.length > 1) {
+    if (oldSong) {
       transition.features = await this.analyzer.getAllFeatures(oldSong, newSong);
     }
     return transition;
   }
 
   private async internalTransition(newSong: string): Promise<Transition> {
-    await this.player.getDymoManager().loadFromStore(newSong);
-    let transition// = this.defaultTransition(newSong);
-    if (Math.random() > 0.5) {
-      transition = this.randomTransition(newSong);
-    } else {
-      transition = this.startWhicheverTransitionIsBest(newSong);
+    //stopped playing, reset
+    if (this.previousSongs.length > 0 && !this.player.isPlaying(this.mixGen.getMixDymo())) {
+      this.previousSongs = [];
+      await this.mixGen.init();
     }
+    await this.player.getDymoManager().loadFromStore(newSong);
+    const transition = await this.defaultTransition(newSong);
+    /*if (Math.random() > 0.5) {
+      transition = await this.randomTransition(newSong);
+    } else {*/
+      //transition = await this.startWhicheverTransitionIsBest(newSong);
+    //}
     this.previousSongs.push(newSong);
-    this.keepOnPlaying(this.mixGen.getMixDymo());
+    this.player.playUri(this.mixGen.getMixDymo());
     return transition;
   }
 
   private async defaultTransition(newSong: string): Promise<Transition> {
-    let transition = this.getEmptyTransitionObject();
-    transition.decision = DecisionType.Default;
+    let transition: Transition;
     if (this.previousSongs.length > 0) {
-      //await this.startWhicheverTransitionIsBest(newSong);
-      //(this.getRandomTransition())(newDymo);
-      transition.type = TransitionType.BeatRepeat;
-      transition.duration = await this.mixGen.beatRepeat(newSong);
+      //transition = await this.startWhicheverTransitionIsBest(newSong);
+      //transition = await this.randomTransition(newSong);
+      transition = await this.mixGen.beatmatchCrossfade(newSong);
     } else {
-      transition.type = TransitionType.FadeIn;
-      transition.duration = await this.mixGen.startMixWithFadeIn(newSong);
+      transition = await this.mixGen.startMixWithFadeIn(newSong);
     }
+    transition.decision = DecisionType.Default;
     return transition;
   }
 
   private async randomTransition(newSong: string): Promise<Transition> {
     console.log("random")
-    let transition = this.getEmptyTransitionObject();
-    transition.decision = DecisionType.Random;
+    let transition: Transition;
     if (this.previousSongs.length > 0) {
-      let random = (this.getRandomTransition())
-      transition.type = random[1];
-      transition.duration = await random[0](newSong);
+      transition = await this.getRandomTransition()(newSong);
     } else {
-      transition.type = TransitionType.FadeIn;
-      transition.duration = await this.mixGen.startMixWithFadeIn(newSong);
+      transition = await this.mixGen.startMixWithFadeIn(newSong);
     }
+    transition.decision = DecisionType.Random;
     return transition;
-  }
-
-  private getEmptyTransitionObject(): Transition {
-    return {
-      date: new Date(Date.now()),
-      user: null,
-      rating: null,
-      names: null,
-      features: null,
-      decision: null,
-      type: null,
-      parameters: null,
-      duration: null
-    }
   }
 
   private async startWhicheverTransitionIsBest(newSong: string): Promise<Transition> {
     console.log("tree")
-    let transition = this.getEmptyTransitionObject();
-    transition.decision = DecisionType.DecisionTree;
+    let transition: Transition;
     const previousSong = _.last(this.previousSongs);
 
     if (this.previousSongs.length == 0) {
-      transition.type = TransitionType.FadeIn;
-      transition.duration = await this.mixGen.startMixWithFadeIn(newSong);
+      transition = await this.mixGen.startMixWithFadeIn(newSong);
     } else {
       //const songBoundaries = this.analyzer.getMainSongBody(newSong);
       if (await this.analyzer.hasRegularBeats(newSong) && await this.analyzer.hasRegularBeats(previousSong)) {
@@ -130,8 +116,7 @@ export class AutoDj {
         if (await this.analyzer.tempoSimilar(newSong, previousSong)) {
           console.log("tempo similar")
           //transition using beatmatching and tempo interpolation
-          transition.type = TransitionType.Beatmatch;
-          transition.duration = await this.mixGen.beatmatchCrossfade(newSong);
+          transition = await this.mixGen.beatmatchCrossfade(newSong);
         }/* else if (await analyzer.tempoCloseToMultiple(newSong, previousSong)) {
           console.log("tempo multiple")
           //TODO this.mixGen.transitionImmediatelyByCrossfadeAndBeatmatchToMultiple(newSong, oldDymo);
@@ -139,58 +124,45 @@ export class AutoDj {
         }*/ else if (await this.analyzer.getKeyDistance(newSong, previousSong) <= 2) {
           console.log("key similar")
           if (Math.random() > 0.5) {
-            transition.type = TransitionType.Effects;
-            transition.duration = await this.mixGen.reverbPanDirect(newSong);
+            transition = await this.mixGen.effects(newSong);
           } else {
-            transition.type = TransitionType.EchoFreeze;
-            transition.duration = await this.mixGen.echoFreeze(newSong);
+            transition = await this.mixGen.echoFreeze(newSong);
           }
         } else {
           console.log("give up")
           if (Math.random() > 0.5) {
-            transition.type = TransitionType.Effects;
-            transition.duration = await this.mixGen.beatRepeat(newSong);
+            transition = await this.mixGen.beatRepeat(newSong);
           } else {
-            transition.type = TransitionType.PowerDown;
-            transition.duration = await this.mixGen.powerDown(newSong);
+            transition = await this.mixGen.powerDown(newSong);
           }
         }
       } else if (await this.analyzer.getKeyDistance(newSong, previousSong) <= 2) {
         console.log("key similar")
-        transition.type = TransitionType.EchoFreeze;
-        transition.duration = await this.mixGen.echoFreeze(newSong);
+        transition = await this.mixGen.echoFreeze(newSong);
       } else {
         console.log("give up")
         if (Math.random() > 0.5) {
-          transition.type = TransitionType.Effects;
-          transition.duration = await this.mixGen.beatRepeat(newSong);
+          transition = await this.mixGen.beatRepeat(newSong);
         } else {
-          transition.type = TransitionType.PowerDown;
-          transition.duration = await this.mixGen.powerDown(newSong);
+          transition = await this.mixGen.powerDown(newSong);
         }
       }
     }
+    transition.decision = DecisionType.DecisionTree;
     return transition;
   }
 
-  private getRandomTransition(): [Function, TransitionType] {
-    let transitions: [Function, TransitionType][] = [
-      [(newDymo: string) => this.mixGen.beatmatchCrossfade(newDymo), TransitionType.Beatmatch],
-      [(newDymo: string) => this.mixGen.echoFreeze(newDymo), TransitionType.EchoFreeze],
-      [(newDymo: string) => this.mixGen.direct(newDymo), TransitionType.Slam],
-      [(newDymo: string) => this.mixGen.beatRepeat(newDymo), TransitionType.BeatRepeat],
-      [(newDymo: string) => this.mixGen.crossfade(newDymo), TransitionType.Crossfade],
-      [(newDymo: string) => this.mixGen.powerDown(newDymo), TransitionType.PowerDown],
-      [(newDymo: string) => this.mixGen.reverbPanDirect(newDymo), TransitionType.Effects]
+  private getRandomTransition(): (string) => Promise<Transition> {
+    const transitions: ((string) => Promise<Transition>)[] = [
+      (newDymo: string) => this.mixGen.beatmatchCrossfade(newDymo),
+      (newDymo: string) => this.mixGen.echoFreeze(newDymo),
+      (newDymo: string) => this.mixGen.slam(newDymo),
+      (newDymo: string) => this.mixGen.beatRepeat(newDymo),
+      (newDymo: string) => this.mixGen.crossfade(newDymo),
+      (newDymo: string) => this.mixGen.powerDown(newDymo),
+      (newDymo: string) => this.mixGen.effects(newDymo)
     ];
     return transitions[_.random(transitions.length)];
-  }
-
-  private keepOnPlaying(dymoUri: string) {
-    if (!this.isPlaying) {
-      this.player.playUri(dymoUri);
-      this.isPlaying = true;
-    }
   }
 
 }
