@@ -26,7 +26,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
-var ApiService = (function () {
+var ApiService = /** @class */ (function () {
     function ApiService() {
         this.API_URL = "https://fast-dj.herokuapp.com/"; //"http://localhost:8060/";
     }
@@ -45,6 +45,7 @@ var ApiService = (function () {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(function (r) { return r.text(); })
+            //.then(r => {console.log(r); return r})
             .then(function (t) { return JSON.parse(t); })
             .catch(function (e) { return console.log(e); });
     };
@@ -141,8 +142,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -185,9 +186,8 @@ function createColourCycleIterator(colours) {
         }
     });
 }
-var AppComponent = (function () {
+var AppComponent = /** @class */ (function () {
     function AppComponent(route, apiService, extractionService) {
-        var _this = this;
         this.route = route;
         this.apiService = apiService;
         this.extractionService = extractionService;
@@ -211,11 +211,6 @@ var AppComponent = (function () {
                 colour: this.getNextColour()
             }
         };
-        this.dj = new __WEBPACK_IMPORTED_MODULE_5__mix_auto_dj__["a" /* AutoDj */](null, this.extractionService);
-        this.dj.init().then(function () {
-            _this.status = 'READY';
-            _this.message = 'drop audio here';
-        });
     }
     Object.defineProperty(AppComponent.prototype, "state", {
         get: function () {
@@ -255,9 +250,13 @@ var AppComponent = (function () {
                             _this.state = __assign({}, _this.state, { inDevMode: params.has('dev') });
                         })
                             .subscribe();
-                        return [4 /*yield*/, this.dj.getBeatObservable()];
+                        this.dj = new __WEBPACK_IMPORTED_MODULE_5__mix_auto_dj__["a" /* AutoDj */](null, this.extractionService);
+                        return [4 /*yield*/, this.dj.init()];
                     case 1:
-                        (_a.sent())
+                        _a.sent();
+                        this.status = 'READY';
+                        this.message = 'drop audio here';
+                        this.dj.getBeatObservable()
                             .subscribe(function (b) {
                             _this.status = _this.state.status.type === "SPINNING" ?
                                 "spinning" : "SPINNING";
@@ -269,12 +268,12 @@ var AppComponent = (function () {
     };
     AppComponent.prototype.dragFileAccepted = function (acceptedFile) {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
             var url, _a;
+            var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        if (!(this.ratingDone || this.state.status.type === 'READY')) return [3 /*break*/, 2];
+                        //TODO RECATIVATE MANDATORY RATING!!! if (this.ratingDone || this.state.status.type === 'READY') {
                         this.transitionDone = false;
                         this.ratingDone = false;
                         this.lastTransitionRating = 0;
@@ -286,18 +285,17 @@ var AppComponent = (function () {
                     case 1:
                         _a.lastTransition = _b.sent();
                         this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
-                        console.log("duration", this.lastTransition.duration);
                         //when transition done:
                         setTimeout(function () {
                             _this.transitionDone = true;
                             _this.message = "playing " + acceptedFile.file.name.toLowerCase();
-                        }, this.lastTransition.duration * 1000 + 1000);
-                        _b.label = 2;
-                    case 2: return [2 /*return*/];
+                        }, this.lastTransition.duration * 1000 + 3000);
+                        return [2 /*return*/];
                 }
             });
         });
     };
+    //}
     AppComponent.prototype.onRatingChange = function (event) {
         var _this = this;
         if (this.lastTransition) {
@@ -311,6 +309,7 @@ var AppComponent = (function () {
     AppComponent.prototype.getNextColour = function () {
         return this.cyclicColours.next().value;
     };
+    var _a, _b, _c;
     AppComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["n" /* Component */])({
             selector: 'app-root',
@@ -320,7 +319,6 @@ var AppComponent = (function () {
         __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__angular_router__["a" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_router__["a" /* ActivatedRoute */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__api_service__["a" /* ApiService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__api_service__["a" /* ApiService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__feature_extraction_service__["a" /* FeatureExtractionService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__feature_extraction_service__["a" /* FeatureExtractionService */]) === "function" && _c || Object])
     ], AppComponent);
     return AppComponent;
-    var _a, _b, _c;
 }());
 
 //# sourceMappingURL=app.component.js.map
@@ -356,7 +354,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
-var AppModule = (function () {
+var AppModule = /** @class */ (function () {
     function AppModule() {
     }
     AppModule = __decorate([
@@ -426,7 +424,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 
-var DevControlsComponent = (function () {
+var DevControlsComponent = /** @class */ (function () {
     function DevControlsComponent() {
     }
     DevControlsComponent.prototype.ngOnInit = function () {
@@ -469,6 +467,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 
 
+//import { FeatureList } from 'piper-js/core';
 
 
 // this spawns a web worker, which we only want to do once
@@ -486,7 +485,7 @@ function bufferToAudioData(buffer) {
         duration: buffer.duration
     };
 }
-var FeatureExtractionService = (function () {
+var FeatureExtractionService = /** @class */ (function () {
     function FeatureExtractionService() {
         this.client = new __WEBPACK_IMPORTED_MODULE_1_piper_js_one_shot__["OneShotExtractionClient"](qmWorker, __WEBPACK_IMPORTED_MODULE_1_piper_js_one_shot__["OneShotExtractionScheme"].REMOTE);
     }
@@ -560,8 +559,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -598,14 +597,15 @@ var TONAL_DISTANCES = {
     10: 2,
     11: 5
 };
-var Analyzer = (function () {
+var Analyzer = /** @class */ (function () {
     function Analyzer(store) {
         this.store = store;
         this.beatsCache = new Map();
         this.keysCache = new Map();
+        this.tempoCache = new Map();
     }
     Analyzer.prototype.getAllFeatures = function (song1, song2) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -671,7 +671,7 @@ var Analyzer = (function () {
         return { first: 0, second: 1 };
     };
     Analyzer.prototype.getKeyDistance = function (song1Uri, song2Uri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var dist, _a, _b, _c;
             return __generator(this, function (_d) {
                 switch (_d.label) {
@@ -689,7 +689,7 @@ var Analyzer = (function () {
         });
     };
     Analyzer.prototype.getKey = function (songUri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var key;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -706,21 +706,24 @@ var Analyzer = (function () {
         });
     };
     Analyzer.prototype.getTempo = function (songUri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var durations;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getBeatDurations(songUri)];
+                    case 0:
+                        if (!!this.tempoCache.has(songUri)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.getBeatDurations(songUri)];
                     case 1:
                         durations = _a.sent();
-                        //console.log("tempo", 60/math.mean(durations))
-                        return [2 /*return*/, 60 / __WEBPACK_IMPORTED_MODULE_1_mathjs__["mean"](durations)];
+                        this.tempoCache.set(songUri, 60 / __WEBPACK_IMPORTED_MODULE_1_mathjs__["mean"](durations));
+                        _a.label = 2;
+                    case 2: return [2 /*return*/, this.tempoCache.get(songUri)];
                 }
             });
         });
     };
     Analyzer.prototype.getTempoMultiple = function (song1Uri, song2Uri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var tempoRatio;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -733,7 +736,7 @@ var Analyzer = (function () {
         });
     };
     Analyzer.prototype.getTempoRatio = function (song1Uri, song2Uri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var tempoRatio, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -750,7 +753,7 @@ var Analyzer = (function () {
         });
     };
     Analyzer.prototype.hasRegularBeats = function (songUri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getRegularity(songUri)];
@@ -760,7 +763,7 @@ var Analyzer = (function () {
         });
     };
     Analyzer.prototype.getRegularity = function (songUri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var durations;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -773,7 +776,7 @@ var Analyzer = (function () {
         });
     };
     Analyzer.prototype.tempoSimilar = function (song1Uri, song2Uri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var ratio;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -790,27 +793,36 @@ var Analyzer = (function () {
         return Math.abs(n1 - n2) < .1;
     };
     Analyzer.prototype.getBeatDurations = function (songUri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
+            var bars, beats, _a, _b, durations;
             var _this = this;
-            var bars, beats, _a, _b, _c, _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         if (!!this.beatsCache.has(songUri)) return [3 /*break*/, 4];
                         return [4 /*yield*/, this.store.findParts(songUri)];
                     case 1:
-                        bars = _f.sent();
+                        bars = _c.sent();
                         _b = (_a = __WEBPACK_IMPORTED_MODULE_0_lodash__).flatten;
                         return [4 /*yield*/, Promise.all(bars.map(function (p) { return _this.store.findParts(p); }))];
                     case 2:
-                        beats = _b.apply(_a, [_f.sent()]);
-                        _d = (_c = this.beatsCache).set;
-                        _e = [songUri];
-                        return [4 /*yield*/, Promise.all(beats.map(function (b) { return _this.store.findFeatureValue(b, __WEBPACK_IMPORTED_MODULE_2_dymo_core__["uris"].DURATION_FEATURE); }))];
+                        beats = _b.apply(_a, [_c.sent()]);
+                        return [4 /*yield*/, Promise.all(beats.map(function (b) { return _this.findDuration(b); }))];
                     case 3:
-                        _d.apply(_c, _e.concat([_f.sent()]));
-                        _f.label = 4;
+                        durations = _c.sent();
+                        this.beatsCache.set(songUri, durations);
+                        _c.label = 4;
                     case 4: return [2 /*return*/, this.beatsCache.get(songUri)];
+                }
+            });
+        });
+    };
+    Analyzer.prototype.findDuration = function (dymo) {
+        return __awaiter(this, void 0, Promise, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.store.findFeatureValue(dymo, __WEBPACK_IMPORTED_MODULE_2_dymo_core__["uris"].DURATION_FEATURE)];
+                    case 1: return [2 /*return*/, (_a.sent())];
                 }
             });
         });
@@ -829,11 +841,13 @@ var Analyzer = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AutoDj; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__("../../../../lodash/lodash.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_dymo_core__ = __webpack_require__("../../../../dymo-core/lib/index.js");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_dymo_core___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_dymo_core__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__mix_generator__ = __webpack_require__("../../../../../src/app/mix/mix-generator.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__types__ = __webpack_require__("../../../../../src/app/types.ts");
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__analyzer__ = __webpack_require__("../../../../../src/app/mix/analyzer.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_dymo_player__ = __webpack_require__("../../../../dymo-player/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_dymo_player___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_dymo_player__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dymo_core__ = __webpack_require__("../../../../dymo-core/lib/index.js");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_dymo_core___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_dymo_core__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__mix_generator__ = __webpack_require__("../../../../../src/app/mix/mix-generator.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__types__ = __webpack_require__("../../../../../src/app/mix/types.ts");
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__analyzer__ = __webpack_require__("../../../../../src/app/mix/analyzer.ts");
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -849,8 +863,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -874,28 +888,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 
 
 
-var AutoDj = (function () {
-    function AutoDj(featureApi, extractionService) {
+
+var AutoDj = /** @class */ (function () {
+    //TODO AT SOME POINT IN THE FUTURE WE MAY HAVE AN API WITH SOME FEATURES
+    function AutoDj(featureApi, featureExtractor, decisionType) {
         this.featureApi = featureApi;
-        this.extractionService = extractionService;
+        this.featureExtractor = featureExtractor;
+        this.decisionType = decisionType;
         this.previousPlayingDymos = [];
         this.previousSongs = [];
-        //d;
-        this.manager = new __WEBPACK_IMPORTED_MODULE_1_dymo_core__["DymoManager"](undefined, 1, null, null, 'https://dynamic-music.github.io/dymo-core/audio/impulse_rev.wav');
+        this.player = new __WEBPACK_IMPORTED_MODULE_1_dymo_player__["DymoPlayer"](true, false, 0.5, 2); //, undefined, undefined, true);
     }
     AutoDj.prototype.init = function () {
         var _this = this;
-        return this.manager.init('https://raw.githubusercontent.com/dynamic-music/dymo-core/master/ontologies/') //'https://dynamic-music.github.io/dymo-core/ontologies/')
+        return this.player.init('https://raw.githubusercontent.com/dynamic-music/dymo-core/master/ontologies/') //'https://dynamic-music.github.io/dymo-core/ontologies/')
             .then(function () {
-            _this.store = _this.manager.getStore();
-            _this.dymoGen = new __WEBPACK_IMPORTED_MODULE_1_dymo_core__["DymoGenerator"](_this.store);
-            _this.mixGen = new __WEBPACK_IMPORTED_MODULE_2__mix_generator__["a" /* MixGenerator */](_this.dymoGen, _this.manager);
-            _this.analyzer = new __WEBPACK_IMPORTED_MODULE_4__analyzer__["a" /* Analyzer */](_this.store);
+            _this.store = _this.player.getDymoManager().getStore();
+            _this.dymoGen = new __WEBPACK_IMPORTED_MODULE_2_dymo_core__["DymoGenerator"](false, _this.store);
+            _this.mixGen = new __WEBPACK_IMPORTED_MODULE_3__mix_generator__["a" /* MixGenerator */](_this.dymoGen, _this.player);
+            _this.analyzer = new __WEBPACK_IMPORTED_MODULE_5__analyzer__["a" /* Analyzer */](_this.store);
         });
     };
     AutoDj.prototype.getBeatObservable = function () {
         var _this = this;
-        return (this.manager.getPlayingDymoUris())
+        return (this.player.getPlayingDymoUris())
             .filter(function (playingDymos) {
             // TODO identify which track is playing, and associate with a specific colour
             var nChanged = __WEBPACK_IMPORTED_MODULE_0_lodash__["difference"](playingDymos, _this.previousPlayingDymos).length;
@@ -904,32 +920,35 @@ var AutoDj = (function () {
         });
     };
     AutoDj.prototype.transitionToSong = function (audioUri) {
-        return __awaiter(this, void 0, void 0, function () {
-            var buffer, beats, newSong, keys, oldSong, transition, _a;
+        return __awaiter(this, void 0, Promise, function () {
+            var buffer, beats, newSong, oldSong, keys, transition, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.manager.getAudioBank()];
+                    case 0: return [4 /*yield*/, this.player.getAudioBank()];
                     case 1: return [4 /*yield*/, (_b.sent()).getAudioBuffer(audioUri)];
                     case 2:
                         buffer = _b.sent();
-                        return [4 /*yield*/, this.extractionService.extractBeats(buffer)];
+                        return [4 /*yield*/, this.featureExtractor.extractBeats(buffer)];
                     case 3:
                         beats = _b.sent();
-                        return [4 /*yield*/, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["DymoTemplates"].createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats)];
+                        //drop initial and final incomplete bars
+                        beats = __WEBPACK_IMPORTED_MODULE_0_lodash__["dropWhile"](beats, function (b) { return b.label.value !== "1"; });
+                        beats = __WEBPACK_IMPORTED_MODULE_0_lodash__["dropRightWhile"](beats, function (b) { return b.label.value !== "4"; });
+                        return [4 /*yield*/, __WEBPACK_IMPORTED_MODULE_2_dymo_core__["DymoTemplates"].createAnnotatedBarAndBeatDymo2(this.dymoGen, audioUri, beats)];
                     case 4:
                         newSong = _b.sent();
-                        return [4 /*yield*/, this.extractionService.extractKey(buffer)];
+                        oldSong = this.previousSongs.length ? __WEBPACK_IMPORTED_MODULE_0_lodash__["last"](this.previousSongs) : undefined;
+                        return [4 /*yield*/, this.featureExtractor.extractKey(buffer)];
                     case 5:
                         keys = _b.sent();
-                        this.dymoGen.setSummarizingMode(__WEBPACK_IMPORTED_MODULE_1_dymo_core__["globals"].SUMMARY.MODE);
+                        this.dymoGen.setSummarizingMode(__WEBPACK_IMPORTED_MODULE_2_dymo_core__["globals"].SUMMARY.MODE);
                         return [4 /*yield*/, this.dymoGen.addFeature("key", keys, newSong)];
                     case 6:
                         _b.sent();
-                        oldSong = __WEBPACK_IMPORTED_MODULE_0_lodash__["last"](this.previousSongs);
                         return [4 /*yield*/, this.internalTransition(newSong)];
                     case 7:
                         transition = _b.sent();
-                        if (!(this.previousSongs.length > 1)) return [3 /*break*/, 9];
+                        if (!oldSong) return [3 /*break*/, 9];
                         _a = transition;
                         return [4 /*yield*/, this.analyzer.getAllFeatures(oldSong, newSong)];
                     case 8:
@@ -941,200 +960,187 @@ var AutoDj = (function () {
         });
     };
     AutoDj.prototype.internalTransition = function (newSong) {
-        return __awaiter(this, void 0, void 0, function () {
-            var transition // = this.defaultTransition(newSong);
-            ;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.manager.loadFromStore(newSong)];
+        return __awaiter(this, void 0, Promise, function () {
+            var transition, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!(this.previousSongs.length > 0 && !this.player.isPlaying(this.mixGen.getMixDymo()))) return [3 /*break*/, 2];
+                        this.previousSongs = [];
+                        return [4 /*yield*/, this.mixGen.init()];
                     case 1:
-                        _a.sent();
-                        if (Math.random() > 0.5) {
-                            transition = this.randomTransition(newSong);
-                        }
-                        else {
-                            transition = this.startWhicheverTransitionIsBest(newSong);
-                        }
+                        _b.sent();
+                        _b.label = 2;
+                    case 2: return [4 /*yield*/, this.player.getDymoManager().loadFromStore(newSong)];
+                    case 3:
+                        _b.sent();
+                        if (!(this.decisionType == __WEBPACK_IMPORTED_MODULE_4__types__["a" /* DecisionType */].Default)) return [3 /*break*/, 5];
+                        return [4 /*yield*/, this.defaultTransition(newSong)];
+                    case 4:
+                        transition = _b.sent();
+                        return [3 /*break*/, 14];
+                    case 5:
+                        if (!(this.decisionType == __WEBPACK_IMPORTED_MODULE_4__types__["a" /* DecisionType */].Random)) return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.randomTransition(newSong)];
+                    case 6:
+                        transition = _b.sent();
+                        return [3 /*break*/, 14];
+                    case 7:
+                        if (!(this.decisionType == __WEBPACK_IMPORTED_MODULE_4__types__["a" /* DecisionType */].DecisionTree)) return [3 /*break*/, 9];
+                        return [4 /*yield*/, this.startWhicheverTransitionIsBest(newSong)];
+                    case 8:
+                        transition = _b.sent();
+                        return [3 /*break*/, 14];
+                    case 9:
+                        if (!(Math.random() > 0.5)) return [3 /*break*/, 11];
+                        return [4 /*yield*/, this.randomTransition(newSong)];
+                    case 10:
+                        _a = _b.sent();
+                        return [3 /*break*/, 13];
+                    case 11: return [4 /*yield*/, this.startWhicheverTransitionIsBest(newSong)];
+                    case 12:
+                        _a = _b.sent();
+                        _b.label = 13;
+                    case 13:
+                        //fiftyfifty random and decision tree
+                        transition = _a;
+                        _b.label = 14;
+                    case 14:
                         this.previousSongs.push(newSong);
-                        this.keepOnPlaying(this.mixGen.getMixDymo());
+                        this.player.playUri(this.mixGen.getMixDymo());
                         return [2 /*return*/, transition];
                 }
             });
         });
     };
     AutoDj.prototype.defaultTransition = function (newSong) {
-        return __awaiter(this, void 0, void 0, function () {
-            var transition, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+        return __awaiter(this, void 0, Promise, function () {
+            var transition;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        transition = this.getEmptyTransitionObject();
-                        transition.decision = __WEBPACK_IMPORTED_MODULE_3__types__["a" /* DecisionType */].Default;
                         if (!(this.previousSongs.length > 0)) return [3 /*break*/, 2];
-                        //await this.startWhicheverTransitionIsBest(newSong);
-                        //(this.getRandomTransition())(newDymo);
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].BeatRepeat;
-                        _a = transition;
-                        return [4 /*yield*/, this.mixGen.beatRepeat(newSong)];
+                        return [4 /*yield*/, this.mixGen.beatmatchCrossfade(newSong)];
                     case 1:
-                        _a.duration = _c.sent();
+                        //transition = await this.startWhicheverTransitionIsBest(newSong);
+                        //transition = await this.randomTransition(newSong);
+                        transition = _a.sent();
                         return [3 /*break*/, 4];
-                    case 2:
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].FadeIn;
-                        _b = transition;
-                        return [4 /*yield*/, this.mixGen.startMixWithFadeIn(newSong)];
+                    case 2: return [4 /*yield*/, this.mixGen.startMixWithFadeIn(newSong)];
                     case 3:
-                        _b.duration = _c.sent();
-                        _c.label = 4;
-                    case 4: return [2 /*return*/, transition];
+                        transition = _a.sent();
+                        _a.label = 4;
+                    case 4:
+                        transition.decision = __WEBPACK_IMPORTED_MODULE_4__types__["a" /* DecisionType */].Default;
+                        return [2 /*return*/, transition];
                 }
             });
         });
     };
     AutoDj.prototype.randomTransition = function (newSong) {
-        return __awaiter(this, void 0, void 0, function () {
-            var transition, random, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+        return __awaiter(this, void 0, Promise, function () {
+            var transition;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         console.log("random");
-                        transition = this.getEmptyTransitionObject();
-                        transition.decision = __WEBPACK_IMPORTED_MODULE_3__types__["a" /* DecisionType */].Random;
                         if (!(this.previousSongs.length > 0)) return [3 /*break*/, 2];
-                        random = (this.getRandomTransition());
-                        transition.type = random[1];
-                        _a = transition;
-                        return [4 /*yield*/, random[0](newSong)];
+                        return [4 /*yield*/, this.getRandomTransition()(newSong)];
                     case 1:
-                        _a.duration = _c.sent();
+                        transition = _a.sent();
                         return [3 /*break*/, 4];
-                    case 2:
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].FadeIn;
-                        _b = transition;
-                        return [4 /*yield*/, this.mixGen.startMixWithFadeIn(newSong)];
+                    case 2: return [4 /*yield*/, this.mixGen.startMixWithFadeIn(newSong)];
                     case 3:
-                        _b.duration = _c.sent();
-                        _c.label = 4;
-                    case 4: return [2 /*return*/, transition];
+                        transition = _a.sent();
+                        _a.label = 4;
+                    case 4:
+                        transition.decision = __WEBPACK_IMPORTED_MODULE_4__types__["a" /* DecisionType */].Random;
+                        return [2 /*return*/, transition];
                 }
             });
         });
     };
-    AutoDj.prototype.getEmptyTransitionObject = function () {
-        return {
-            date: new Date(Date.now()),
-            user: null,
-            rating: null,
-            names: null,
-            features: null,
-            decision: null,
-            type: null,
-            parameters: null,
-            duration: null
-        };
-    };
     AutoDj.prototype.startWhicheverTransitionIsBest = function (newSong) {
-        return __awaiter(this, void 0, void 0, function () {
-            var transition, previousSong, _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
-            return __generator(this, function (_l) {
-                switch (_l.label) {
+        return __awaiter(this, void 0, Promise, function () {
+            var transition, previousSong, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         console.log("tree");
-                        transition = this.getEmptyTransitionObject();
-                        transition.decision = __WEBPACK_IMPORTED_MODULE_3__types__["a" /* DecisionType */].DecisionTree;
                         previousSong = __WEBPACK_IMPORTED_MODULE_0_lodash__["last"](this.previousSongs);
                         if (!(this.previousSongs.length == 0)) return [3 /*break*/, 2];
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].FadeIn;
-                        _a = transition;
                         return [4 /*yield*/, this.mixGen.startMixWithFadeIn(newSong)];
                     case 1:
-                        _a.duration = _l.sent();
+                        transition = _b.sent();
                         return [3 /*break*/, 26];
                     case 2: return [4 /*yield*/, this.analyzer.hasRegularBeats(newSong)];
                     case 3:
-                        _b = (_l.sent());
-                        if (!_b) return [3 /*break*/, 5];
+                        _a = (_b.sent());
+                        if (!_a) return [3 /*break*/, 5];
                         return [4 /*yield*/, this.analyzer.hasRegularBeats(previousSong)];
                     case 4:
-                        _b = (_l.sent());
-                        _l.label = 5;
+                        _a = (_b.sent());
+                        _b.label = 5;
                     case 5:
-                        if (!_b) return [3 /*break*/, 19];
+                        if (!_a) return [3 /*break*/, 19];
                         console.log("both regular");
                         return [4 /*yield*/, this.analyzer.tempoSimilar(newSong, previousSong)];
                     case 6:
-                        if (!_l.sent()) return [3 /*break*/, 8];
+                        if (!_b.sent()) return [3 /*break*/, 8];
                         console.log("tempo similar");
-                        //transition using beatmatching and tempo interpolation
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Beatmatch;
-                        _c = transition;
                         return [4 /*yield*/, this.mixGen.beatmatchCrossfade(newSong)];
                     case 7:
-                        _c.duration = _l.sent();
+                        //transition using beatmatching and tempo interpolation
+                        transition = _b.sent();
                         return [3 /*break*/, 18];
                     case 8: return [4 /*yield*/, this.analyzer.getKeyDistance(newSong, previousSong)];
                     case 9:
-                        if (!((_l.sent()) <= 2)) return [3 /*break*/, 14];
+                        if (!((_b.sent()) <= 2)) return [3 /*break*/, 14];
                         console.log("key similar");
                         if (!(Math.random() > 0.5)) return [3 /*break*/, 11];
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Effects;
-                        _d = transition;
-                        return [4 /*yield*/, this.mixGen.reverbPanDirect(newSong)];
+                        return [4 /*yield*/, this.mixGen.effects(newSong)];
                     case 10:
-                        _d.duration = _l.sent();
+                        transition = _b.sent();
                         return [3 /*break*/, 13];
-                    case 11:
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].EchoFreeze;
-                        _e = transition;
-                        return [4 /*yield*/, this.mixGen.echoFreeze(newSong)];
+                    case 11: return [4 /*yield*/, this.mixGen.echoFreeze(newSong)];
                     case 12:
-                        _e.duration = _l.sent();
-                        _l.label = 13;
+                        transition = _b.sent();
+                        _b.label = 13;
                     case 13: return [3 /*break*/, 18];
                     case 14:
                         console.log("give up");
                         if (!(Math.random() > 0.5)) return [3 /*break*/, 16];
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Effects;
-                        _f = transition;
                         return [4 /*yield*/, this.mixGen.beatRepeat(newSong)];
                     case 15:
-                        _f.duration = _l.sent();
+                        transition = _b.sent();
                         return [3 /*break*/, 18];
-                    case 16:
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].PowerDown;
-                        _g = transition;
-                        return [4 /*yield*/, this.mixGen.powerDown(newSong)];
+                    case 16: return [4 /*yield*/, this.mixGen.powerDown(newSong)];
                     case 17:
-                        _g.duration = _l.sent();
-                        _l.label = 18;
+                        transition = _b.sent();
+                        _b.label = 18;
                     case 18: return [3 /*break*/, 26];
                     case 19: return [4 /*yield*/, this.analyzer.getKeyDistance(newSong, previousSong)];
                     case 20:
-                        if (!((_l.sent()) <= 2)) return [3 /*break*/, 22];
+                        if (!((_b.sent()) <= 2)) return [3 /*break*/, 22];
                         console.log("key similar");
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].EchoFreeze;
-                        _h = transition;
                         return [4 /*yield*/, this.mixGen.echoFreeze(newSong)];
                     case 21:
-                        _h.duration = _l.sent();
+                        transition = _b.sent();
                         return [3 /*break*/, 26];
                     case 22:
                         console.log("give up");
                         if (!(Math.random() > 0.5)) return [3 /*break*/, 24];
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Effects;
-                        _j = transition;
                         return [4 /*yield*/, this.mixGen.beatRepeat(newSong)];
                     case 23:
-                        _j.duration = _l.sent();
+                        transition = _b.sent();
                         return [3 /*break*/, 26];
-                    case 24:
-                        transition.type = __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].PowerDown;
-                        _k = transition;
-                        return [4 /*yield*/, this.mixGen.powerDown(newSong)];
+                    case 24: return [4 /*yield*/, this.mixGen.powerDown(newSong)];
                     case 25:
-                        _k.duration = _l.sent();
-                        _l.label = 26;
-                    case 26: return [2 /*return*/, transition];
+                        transition = _b.sent();
+                        _b.label = 26;
+                    case 26:
+                        transition.decision = __WEBPACK_IMPORTED_MODULE_4__types__["a" /* DecisionType */].DecisionTree;
+                        return [2 /*return*/, transition];
                 }
             });
         });
@@ -1142,21 +1148,15 @@ var AutoDj = (function () {
     AutoDj.prototype.getRandomTransition = function () {
         var _this = this;
         var transitions = [
-            [function (newDymo) { return _this.mixGen.beatmatchCrossfade(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Beatmatch],
-            [function (newDymo) { return _this.mixGen.echoFreeze(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].EchoFreeze],
-            [function (newDymo) { return _this.mixGen.direct(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Slam],
-            [function (newDymo) { return _this.mixGen.beatRepeat(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].BeatRepeat],
-            [function (newDymo) { return _this.mixGen.crossfade(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Crossfade],
-            [function (newDymo) { return _this.mixGen.powerDown(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].PowerDown],
-            [function (newDymo) { return _this.mixGen.reverbPanDirect(newDymo); }, __WEBPACK_IMPORTED_MODULE_3__types__["b" /* TransitionType */].Effects]
+            function (newDymo) { return _this.mixGen.beatmatchCrossfade(newDymo); },
+            function (newDymo) { return _this.mixGen.echoFreeze(newDymo); },
+            function (newDymo) { return _this.mixGen.slam(newDymo); },
+            function (newDymo) { return _this.mixGen.beatRepeat(newDymo); },
+            function (newDymo) { return _this.mixGen.crossfade(newDymo); },
+            function (newDymo) { return _this.mixGen.powerDown(newDymo); },
+            function (newDymo) { return _this.mixGen.effects(newDymo); }
         ];
         return transitions[__WEBPACK_IMPORTED_MODULE_0_lodash__["random"](transitions.length)];
-    };
-    AutoDj.prototype.keepOnPlaying = function (dymoUri) {
-        if (!this.isPlaying) {
-            this.manager.startPlayingUri(dymoUri);
-            this.isPlaying = true;
-        }
     };
     return AutoDj;
 }());
@@ -1174,6 +1174,7 @@ var AutoDj = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_dymo_core__ = __webpack_require__("../../../../dymo-core/lib/index.js");
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_dymo_core___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_dymo_core__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__types__ = __webpack_require__("../../../../../src/app/mix/types.ts");
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -1189,8 +1190,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
         while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -1211,15 +1212,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 
 
-//export const TRANSITIONS: Map<string,Function> = new Map<string,Function>();
-//TRANSITIONS.set("BeatmatchCrossfade", )
-var TRIGGER_DELAY = 3;
-var MixGenerator = (function () {
-    function MixGenerator(generator, manager) {
+
+var TRANSITION_OFFSET = 1; //number of bars from current position any transition starts
+var MixGenerator = /** @class */ (function () {
+    function MixGenerator(generator, player) {
         this.generator = generator;
-        this.manager = manager;
-        this.songs = [];
-        this.transitions = []; //ARRAY OF CONSTRAINT URIS FOR NOW
+        this.player = player;
+        this.transitionConstraints = []; //ARRAYS OF CONSTRAINT URIS FOR NOW
         this.store = generator.getStore();
         this.expressionGen = new __WEBPACK_IMPORTED_MODULE_1_dymo_core__["ExpressionGenerator"](this.store);
         this.init();
@@ -1230,6 +1229,7 @@ var MixGenerator = (function () {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        this.songs = [];
                         _a = this;
                         return [4 /*yield*/, this.generator.addDymo()];
                     case 1:
@@ -1243,171 +1243,127 @@ var MixGenerator = (function () {
         return this.mixDymoUri;
     };
     MixGenerator.prototype.startMixWithFadeIn = function (songUri, numBars) {
-        if (numBars === void 0) { numBars = 3; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, _a, duration, uris;
+        if (numBars === void 0) { numBars = 2; }
+        return __awaiter(this, void 0, Promise, function () {
+            var newSongBars, _a, duration, uris, result;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri)];
                     case 1:
                         newSongBars = _b.sent();
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars)];
-                    case 2:
-                        _b.sent();
                         return [4 /*yield*/, this.applyFadeIn(newSongBars.slice(0, numBars))];
-                    case 3:
+                    case 2:
                         _a = _b.sent(), duration = _a[0], uris = _a[1];
-                        return [4 /*yield*/, this.loadAndTriggerTransition.apply(this, uris)];
-                    case 4:
-                        _b.sent();
-                        return [2 /*return*/, duration + TRIGGER_DELAY];
+                        return [4 /*yield*/, this.endTransition(newSongBars, __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].FadeIn, duration, uris)];
+                    case 3:
+                        result = _b.sent();
+                        //console.log(await this.store.lo)
+                        return [2 /*return*/, result];
                 }
             });
         });
     };
-    MixGenerator.prototype.direct = function (songUri, offsetBars) {
-        if (offsetBars === void 0) { offsetBars = 8; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos;
+    MixGenerator.prototype.slam = function (songUri, offsetBars) {
+        if (offsetBars === void 0) { offsetBars = 0; }
+        return __awaiter(this, void 0, Promise, function () {
+            var state;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri, offsetBars)];
+                    case 0: return [4 /*yield*/, this.initTransition(songUri, offsetBars)];
                     case 1:
-                        newSongBars = _a.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
-                    case 2:
-                        currentPos = _a.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + 1)];
-                    case 3:
-                        _a.sent();
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars)];
-                    case 4:
-                        _a.sent();
-                        return [2 /*return*/, TRIGGER_DELAY];
+                        state = _a.sent();
+                        return [2 /*return*/, this.endTransition(state.newSongBars, __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].Slam, 0)];
                 }
             });
         });
     };
     MixGenerator.prototype.beatRepeat = function (songUri, times, offsetBars) {
-        if (times === void 0) { times = 2; }
-        if (offsetBars === void 0) { offsetBars = 8; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos, oldSongBars, lastBar, lastBeat, lastBarDuration, firstBarBeats;
+        if (times === void 0) { times = 3; }
+        if (offsetBars === void 0) { offsetBars = 0; }
+        return __awaiter(this, void 0, Promise, function () {
+            var state, lastBar, lastBeat, lastBarDuration, firstBarBeats;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri, offsetBars)];
+                    case 0: return [4 /*yield*/, this.initTransition(songUri, offsetBars)];
                     case 1:
-                        newSongBars = _a.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
+                        state = _a.sent();
+                        return [4 /*yield*/, this.findLastBar()];
                     case 2:
-                        currentPos = _a.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + 1)];
-                    case 3:
-                        oldSongBars = _a.sent();
-                        return [4 /*yield*/, this.store.findPartAt(this.mixDymoUri, currentPos)];
-                    case 4:
                         lastBar = _a.sent();
                         return [4 /*yield*/, this.store.findPartAt(lastBar, 3)];
-                    case 5:
+                    case 3:
                         lastBeat = _a.sent();
-                        return [4 /*yield*/, this.store.setParameter(lastBeat, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].REVERB, 0.5)];
-                    case 6:
+                        return [4 /*yield*/, this.store.setParameter(lastBeat, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DELAY, 0.5)];
+                    case 4:
                         _a.sent();
-                        return [4 /*yield*/, this.store.findFeatureValue(oldSongBars[0], __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DURATION_FEATURE)];
-                    case 7:
+                        return [4 /*yield*/, this.store.findFeatureValue(state.removedOldSongBars[0], __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DURATION_FEATURE)];
+                    case 5:
                         lastBarDuration = _a.sent();
                         return [4 /*yield*/, this.addSilence(lastBarDuration / 2)];
-                    case 8:
+                    case 6:
                         _a.sent();
-                        return [4 /*yield*/, this.store.findParts(newSongBars[0])];
-                    case 9:
+                        return [4 /*yield*/, this.store.findParts(state.newSongBars[0])];
+                    case 7:
                         firstBarBeats = _a.sent();
                         return [4 /*yield*/, this.addPartsToMix(__WEBPACK_IMPORTED_MODULE_0_lodash__["fill"](Array(times), firstBarBeats[0]))];
-                    case 10:
+                    case 8:
                         _a.sent();
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars)];
-                    case 11:
-                        _a.sent();
-                        return [2 /*return*/, 2 + TRIGGER_DELAY]; //just an estimate for now
+                        return [2 /*return*/, this.endTransition(state.newSongBars, __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].BeatRepeat, 2)]; //duration just an estimate for now
                 }
             });
         });
     };
     MixGenerator.prototype.echoFreeze = function (songUri, numBarsBreak) {
         if (numBarsBreak === void 0) { numBarsBreak = 1; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos, lastBar, lastBarDuration;
+        return __awaiter(this, void 0, Promise, function () {
+            var state, lastBar, lastBarDuration, silenceDuration;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri)];
+                    case 0: return [4 /*yield*/, this.initTransition(songUri)];
                     case 1:
-                        newSongBars = _a.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
+                        state = _a.sent();
+                        return [4 /*yield*/, this.findLastBar()];
                     case 2:
-                        currentPos = _a.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + 1)];
-                    case 3:
-                        _a.sent();
-                        return [4 /*yield*/, this.store.findPartAt(this.mixDymoUri, currentPos)];
-                    case 4:
                         lastBar = _a.sent();
                         return [4 /*yield*/, this.store.setParameter(lastBar, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DELAY, 1)];
-                    case 5:
+                    case 3:
                         _a.sent();
                         return [4 /*yield*/, this.store.findFeatureValue(lastBar, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DURATION_FEATURE)];
-                    case 6:
+                    case 4:
                         lastBarDuration = _a.sent();
-                        return [4 /*yield*/, this.addSilence(lastBarDuration * numBarsBreak)];
-                    case 7:
+                        silenceDuration = lastBarDuration * numBarsBreak;
+                        return [4 /*yield*/, this.addSilence(silenceDuration)];
+                    case 5:
                         _a.sent();
-                        //add new song
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars)];
-                    case 8:
-                        //add new song
-                        _a.sent();
-                        return [2 /*return*/, lastBarDuration * (numBarsBreak + 1) + TRIGGER_DELAY];
+                        return [2 /*return*/, this.endTransition(state.newSongBars, __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].EchoFreeze, lastBarDuration + silenceDuration)];
                 }
             });
         });
     };
-    MixGenerator.prototype.reverbPanDirect = function (songUri, numBars, offsetBars) {
-        if (numBars === void 0) { numBars = 3; }
-        if (offsetBars === void 0) { offsetBars = 8; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos, lastBars, lastBarDuration, effectsDuration, effectsRamp, reverb;
+    MixGenerator.prototype.effects = function (songUri, numBars, offsetBars) {
+        if (numBars === void 0) { numBars = 2; }
+        if (offsetBars === void 0) { offsetBars = 0; }
+        return __awaiter(this, void 0, Promise, function () {
+            var state, effectBars, duration, effectsRamp, reverb;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri)];
+                    case 0: return [4 /*yield*/, this.initTransition(songUri, offsetBars)];
                     case 1:
-                        newSongBars = _a.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
+                        state = _a.sent();
+                        effectBars = state.removedOldSongBars.slice(0, numBars);
+                        return [4 /*yield*/, this.getTotalDuration(effectBars)];
                     case 2:
-                        currentPos = _a.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + numBars)];
+                        duration = _a.sent();
+                        return [4 /*yield*/, this.addRampWithTrigger(duration)];
                     case 3:
-                        _a.sent();
-                        return [4 /*yield*/, this.store.findParts(this.mixDymoUri)];
-                    case 4:
-                        lastBars = (_a.sent()).slice(-numBars);
-                        return [4 /*yield*/, this.store.findFeatureValue(lastBars[0], __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DURATION_FEATURE)];
-                    case 5:
-                        lastBarDuration = _a.sent();
-                        effectsDuration = lastBarDuration * numBars;
-                        return [4 /*yield*/, this.generator.addRampControl(0, effectsDuration, 100)];
-                    case 6:
                         effectsRamp = _a.sent();
-                        return [4 /*yield*/, this.makeRampConstraint(effectsRamp, lastBars, 'Reverb(d) == r')];
-                    case 7:
+                        return [4 /*yield*/, this.makeRampConstraint(effectsRamp, effectBars, 'Reverb(d) == r')];
+                    case 4:
                         reverb = _a.sent();
-                        //add new song
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars)];
-                    case 8:
-                        //add new song
+                        return [4 /*yield*/, this.addPartsToMix(effectBars)];
+                    case 5:
                         _a.sent();
-                        return [4 /*yield*/, this.loadAndTriggerTransition(effectsRamp, reverb)];
-                    case 9:
-                        _a.sent();
-                        return [2 /*return*/, effectsDuration + TRIGGER_DELAY];
+                        return [2 /*return*/, this.endTransition(state.newSongBars, __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].Effects, duration, [effectsRamp, reverb])];
                 }
             });
         });
@@ -1415,120 +1371,102 @@ var MixGenerator = (function () {
     MixGenerator.prototype.powerDown = function (songUri, numBars, numBarsBreak) {
         if (numBars === void 0) { numBars = 2; }
         if (numBarsBreak === void 0) { numBarsBreak = 0; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos, lastBars, lastBarDuration, powerDuration, powerRamp, powerDown, powerDown2;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri)];
+        return __awaiter(this, void 0, Promise, function () {
+            var state, powerBars, duration, _a, powerRamp, powerDown, powerDown2, silenceDuration;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.initTransition(songUri)];
                     case 1:
-                        newSongBars = _a.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
+                        state = _b.sent();
+                        powerBars = state.removedOldSongBars.slice(0, numBars);
+                        _a = 2;
+                        return [4 /*yield*/, this.getTotalDuration(powerBars)];
                     case 2:
-                        currentPos = _a.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + numBars)];
+                        duration = _a * (_b.sent());
+                        return [4 /*yield*/, this.addRampWithTrigger(duration)];
                     case 3:
-                        _a.sent();
-                        return [4 /*yield*/, this.store.findParts(this.mixDymoUri)];
+                        powerRamp = _b.sent();
+                        return [4 /*yield*/, this.makeRampConstraint(powerRamp, powerBars, 'PlaybackRate(d) == 1-r')];
                     case 4:
-                        lastBars = (_a.sent()).slice(-numBars);
-                        return [4 /*yield*/, this.store.findFeatureValue(lastBars[0], __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DURATION_FEATURE)];
+                        powerDown = _b.sent();
+                        return [4 /*yield*/, this.makeSetsConstraint([['d', powerBars]], 'DurationRatio(d) == 1/PlaybackRate(d)')];
                     case 5:
-                        lastBarDuration = _a.sent();
-                        powerDuration = lastBarDuration * numBars * 2;
-                        return [4 /*yield*/, this.generator.addRampControl(0, powerDuration, 100)];
+                        powerDown2 = _b.sent();
+                        return [4 /*yield*/, this.loadTransition(powerRamp, powerDown, powerDown2)];
                     case 6:
-                        powerRamp = _a.sent();
-                        return [4 /*yield*/, this.makeRampConstraint(powerRamp, lastBars, 'PlaybackRate(d) == 1-r')];
+                        _b.sent();
+                        return [4 /*yield*/, this.addPartsToMix(powerBars)];
                     case 7:
-                        powerDown = _a.sent();
-                        return [4 /*yield*/, this.makeSetsConstraint([['d', lastBars]], 'DurationRatio(d) == 1/PlaybackRate(d)')];
+                        _b.sent();
+                        silenceDuration = (duration / 2 / numBars) * numBarsBreak;
+                        return [4 /*yield*/, this.addSilence(silenceDuration)];
                     case 8:
-                        powerDown2 = _a.sent();
-                        //add silence for n bars
-                        return [4 /*yield*/, this.addSilence(lastBarDuration * numBarsBreak)];
-                    case 9:
-                        //add silence for n bars
-                        _a.sent();
+                        _b.sent();
                         //add new song
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars)];
-                    case 10:
-                        //add new song
-                        _a.sent();
-                        return [4 /*yield*/, this.loadAndTriggerTransition(powerRamp, powerDown, powerDown2)];
-                    case 11:
-                        _a.sent();
-                        return [2 /*return*/, powerDuration + numBarsBreak + TRIGGER_DELAY];
+                        return [2 /*return*/, this.endTransition(state.newSongBars, __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].PowerDown, duration + silenceDuration)];
                 }
             });
         });
     };
     MixGenerator.prototype.crossfade = function (songUri, numBars, offsetBars) {
-        if (numBars === void 0) { numBars = 4; }
-        if (offsetBars === void 0) { offsetBars = 8; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos, restOfOldSong, newSongTrans, oldSongTrans, _a, duration, uris;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri, offsetBars)];
+        if (numBars === void 0) { numBars = 3; }
+        if (offsetBars === void 0) { offsetBars = 0; }
+        return __awaiter(this, void 0, Promise, function () {
+            var state, newSongTrans, duration, oldSongTrans, uris;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.initTransition(songUri, offsetBars)];
                     case 1:
-                        newSongBars = _b.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
+                        state = _a.sent();
+                        newSongTrans = state.newSongBars.slice(0, numBars);
+                        return [4 /*yield*/, this.getTotalDuration(newSongTrans)];
                     case 2:
-                        currentPos = _b.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + 1)];
+                        duration = _a.sent();
+                        return [4 /*yield*/, this.getInitialBars(state.removedOldSongBars, duration)];
                     case 3:
-                        restOfOldSong = _b.sent();
-                        newSongTrans = newSongBars.slice(0, numBars);
-                        return [4 /*yield*/, this.applyAlign(restOfOldSong, newSongTrans)];
+                        oldSongTrans = _a.sent();
+                        return [4 /*yield*/, this.applyCrossfade(oldSongTrans, newSongTrans, duration)];
                     case 4:
-                        oldSongTrans = _b.sent();
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars.slice(numBars))];
+                        uris = _a.sent();
+                        return [4 /*yield*/, this.addAligned(oldSongTrans, newSongTrans)];
                     case 5:
-                        _b.sent();
-                        return [4 /*yield*/, this.applyCrossfade(oldSongTrans, newSongTrans)];
-                    case 6:
-                        _a = _b.sent(), duration = _a[0], uris = _a[1];
-                        return [4 /*yield*/, this.loadAndTriggerTransition.apply(this, uris)];
-                    case 7:
-                        _b.sent();
-                        return [2 /*return*/, duration + TRIGGER_DELAY];
+                        _a.sent();
+                        return [2 /*return*/, this.endTransition(state.newSongBars.slice(numBars), __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].Crossfade, duration, uris)];
                 }
             });
         });
     };
     MixGenerator.prototype.beatmatchCrossfade = function (songUri, numBars, offsetBars) {
-        if (numBars === void 0) { numBars = 4; }
-        if (offsetBars === void 0) { offsetBars = 8; }
-        return __awaiter(this, void 0, void 0, function () {
-            var newSongBars, currentPos, restOfOldSong, newSongTrans, oldSongTrans, _a, duration, uris1, uris2;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri, offsetBars)];
+        if (numBars === void 0) { numBars = 3; }
+        if (offsetBars === void 0) { offsetBars = 0; }
+        return __awaiter(this, void 0, Promise, function () {
+            var state, newSongTrans, oldSongTrans, duration, uris, _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.initTransition(songUri, offsetBars)];
                     case 1:
-                        newSongBars = _b.sent();
-                        return [4 /*yield*/, this.manager.getPosition(this.mixDymoUri)];
+                        state = _c.sent();
+                        newSongTrans = state.newSongBars.slice(0, numBars);
+                        oldSongTrans = state.removedOldSongBars.slice(0, numBars);
+                        return [4 /*yield*/, this.getTotalDuration(oldSongTrans.concat(newSongTrans))];
                     case 2:
-                        currentPos = _b.sent();
-                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, currentPos + 1)];
+                        duration = (_c.sent()) / 2 - 0.5;
+                        return [4 /*yield*/, this.applyCrossfade(oldSongTrans, newSongTrans, duration)];
                     case 3:
-                        restOfOldSong = _b.sent();
-                        newSongTrans = newSongBars.slice(0, numBars);
-                        return [4 /*yield*/, this.applyPairwiseAlign(restOfOldSong, newSongTrans)];
+                        uris = _c.sent();
+                        if (!(newSongTrans.length == oldSongTrans.length)) return [3 /*break*/, 5];
+                        _b = (_a = uris).concat;
+                        return [4 /*yield*/, this.applyBeatmatch(oldSongTrans, newSongTrans, uris[0])];
                     case 4:
-                        oldSongTrans = _b.sent();
-                        return [4 /*yield*/, this.addPartsToMix(newSongBars.slice(numBars))];
-                    case 5:
-                        _b.sent();
-                        return [4 /*yield*/, this.applyCrossfade(oldSongTrans, newSongTrans)];
+                        uris = _b.apply(_a, [_c.sent()]);
+                        _c.label = 5;
+                    case 5: 
+                    //add transition part
+                    return [4 /*yield*/, this.addZipped(oldSongTrans, newSongTrans)];
                     case 6:
-                        _a = _b.sent(), duration = _a[0], uris1 = _a[1];
-                        return [4 /*yield*/, this.applyBeatmatch(oldSongTrans, newSongTrans, uris1[0])];
-                    case 7:
-                        uris2 = _b.sent();
-                        return [4 /*yield*/, this.loadAndTriggerTransition.apply(this, uris1.concat(uris2))];
-                    case 8:
-                        _b.sent();
-                        return [2 /*return*/, duration + TRIGGER_DELAY];
+                        //add transition part
+                        _c.sent();
+                        return [2 /*return*/, this.endTransition(state.newSongBars.slice(numBars), __WEBPACK_IMPORTED_MODULE_2__types__["b" /* TransitionType */].Beatmatch, duration, uris)];
                 }
             });
         });
@@ -1563,51 +1501,45 @@ var MixGenerator = (function () {
             });
         });
     };
-    //returns uris of parts of old song that are part of transition
-    MixGenerator.prototype.applyAlign = function (restOfOldSong, newSongTransitionBars) {
-        return __awaiter(this, void 0, void 0, function () {
+    MixGenerator.prototype.addAligned = function (bars1, bars2) {
+        return __awaiter(this, void 0, Promise, function () {
+            var bars1Seq, bars2Seq;
             var _this = this;
-            var oldSongBars, oldSongSeq, newSongSeq;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        oldSongBars = restOfOldSong.slice(0, newSongTransitionBars.length);
-                        return [4 /*yield*/, this.generator.addDymo(null, null, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].SEQUENCE)];
+                    case 0: return [4 /*yield*/, this.generator.addDymo(null, null, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].SEQUENCE)];
                     case 1:
-                        oldSongSeq = _a.sent();
-                        return [4 /*yield*/, Promise.all(oldSongBars.map(function (p) { return _this.store.addPart(oldSongSeq, p); }))];
+                        bars1Seq = _a.sent();
+                        return [4 /*yield*/, Promise.all(bars1.map(function (p) { return _this.store.addPart(bars1Seq, p); }))];
                     case 2:
                         _a.sent();
                         return [4 /*yield*/, this.generator.addDymo(null, null, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].SEQUENCE)];
                     case 3:
-                        newSongSeq = _a.sent();
-                        return [4 /*yield*/, Promise.all(newSongTransitionBars.map(function (p) { return _this.store.addPart(newSongSeq, p); }))];
+                        bars2Seq = _a.sent();
+                        return [4 /*yield*/, Promise.all(bars2.map(function (p) { return _this.store.addPart(bars2Seq, p); }))];
                     case 4:
                         _a.sent();
-                        return [4 /*yield*/, this.generator.addConjunction(this.mixDymoUri, [oldSongSeq, newSongSeq])];
-                    case 5:
-                        _a.sent();
-                        return [2 /*return*/, oldSongBars];
+                        return [4 /*yield*/, this.generator.addConjunction(this.mixDymoUri, [bars1Seq, bars2Seq])];
+                    case 5: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
-    MixGenerator.prototype.applyPairwiseAlign = function (restOfOldSong, newSongTransitionBars) {
+    MixGenerator.prototype.addZipped = function (bars1, bars2) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            var oldSongBars, barPairs;
             return __generator(this, function (_a) {
-                oldSongBars = restOfOldSong.slice(0, newSongTransitionBars.length);
-                barPairs = __WEBPACK_IMPORTED_MODULE_0_lodash__["zip"](oldSongBars, newSongTransitionBars);
-                barPairs.forEach(function (bp) { return _this.generator.addConjunction(_this.mixDymoUri, bp); });
-                return [2 /*return*/, oldSongBars];
+                Promise.all(__WEBPACK_IMPORTED_MODULE_0_lodash__["zip"](bars1, bars2).map(function (bp) {
+                    return _this.generator.addConjunction(_this.mixDymoUri, bp);
+                }));
+                return [2 /*return*/];
             });
         });
     };
     MixGenerator.prototype.applyBeatmatch = function (oldSongBars, newSongBars, rampUri) {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
             var tempoParam, newTempo, oldTempo, tempoTransition, beats, _a, _b, beatMatch, beatMatch2;
+            var _this = this;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0: return [4 /*yield*/, this.generator.addCustomParameter(__WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].CONTEXT_URI + "Tempo")];
@@ -1626,10 +1558,10 @@ var MixGenerator = (function () {
                         return [4 /*yield*/, Promise.all(oldSongBars.concat(newSongBars).map(function (p) { return _this.store.findParts(p); }))];
                     case 5:
                         beats = _b.apply(_a, [_c.sent()]);
-                        return [4 /*yield*/, this.makeSetsConstraint([['d', beats], ['t', [tempoParam]]], 'PlaybackRate(d) == t/60*DurationFeature(d)')];
+                        return [4 /*yield*/, this.makeSetsConstraint([['d', beats], ['t', [tempoParam]]], 'TimeStretchRatio(d) == t/60*DurationFeature(d)')];
                     case 6:
                         beatMatch = _c.sent();
-                        return [4 /*yield*/, this.makeSetsConstraint([['d', beats]], 'DurationRatio(d) == 1/PlaybackRate(d)')];
+                        return [4 /*yield*/, this.makeSetsConstraint([['d', beats]], 'DurationRatio(d) == 1/TimeStretchRatio(d)')];
                     case 7:
                         beatMatch2 = _c.sent();
                         console.log("beatmatched between tempos", oldTempo, newTempo);
@@ -1639,14 +1571,14 @@ var MixGenerator = (function () {
         });
     };
     MixGenerator.prototype.applyFadeIn = function (newSongBarsParts) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var fadeDuration, fadeRamp, fadeIn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getTotalDuration(newSongBarsParts)];
                     case 1:
                         fadeDuration = _a.sent();
-                        return [4 /*yield*/, this.generator.addRampControl(0, fadeDuration, 100)];
+                        return [4 /*yield*/, this.addRampWithTrigger(fadeDuration)];
                     case 2:
                         fadeRamp = _a.sent();
                         return [4 /*yield*/, this.makeRampConstraint(fadeRamp, newSongBarsParts, 'Amplitude(d) == r')];
@@ -1658,25 +1590,22 @@ var MixGenerator = (function () {
             });
         });
     };
-    MixGenerator.prototype.applyCrossfade = function (oldSongParts, newSongParts) {
-        return __awaiter(this, void 0, void 0, function () {
-            var fadeDuration, fadeRamp, fadeIn, fadeOut;
+    MixGenerator.prototype.applyCrossfade = function (oldSongParts, newSongParts, duration) {
+        return __awaiter(this, void 0, Promise, function () {
+            var fadeRamp, fadeIn, fadeOut;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getTotalDuration(oldSongParts.concat(newSongParts))];
+                    case 0: return [4 /*yield*/, this.addRampWithTrigger(duration)];
                     case 1:
-                        fadeDuration = ((_a.sent()) / 2);
-                        return [4 /*yield*/, this.generator.addRampControl(0, fadeDuration, 100)];
-                    case 2:
                         fadeRamp = _a.sent();
                         return [4 /*yield*/, this.makeRampConstraint(fadeRamp, newSongParts, 'Amplitude(d) == r')];
-                    case 3:
+                    case 2:
                         fadeIn = _a.sent();
                         return [4 /*yield*/, this.makeRampConstraint(fadeRamp, oldSongParts, 'Amplitude(d) == 1-r')];
-                    case 4:
+                    case 3:
                         fadeOut = _a.sent();
-                        console.log("crossfading in for", newSongParts.length, "bars (", fadeDuration, "seconds)");
-                        return [2 /*return*/, [fadeDuration, [fadeRamp, fadeIn, fadeOut]]];
+                        console.log("crossfading for", newSongParts.length, "bars (" + duration + " seconds)");
+                        return [2 /*return*/, [fadeRamp, fadeIn, fadeOut]];
                 }
             });
         });
@@ -1684,9 +1613,9 @@ var MixGenerator = (function () {
     //TODO dymo-core throws the occasional error due to list editing concurrency problem
     MixGenerator.prototype.addRandomBeatToLoop = function (songUri, loopDuration) {
         if (loopDuration === void 0) { loopDuration = 2; }
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
+        return __awaiter(this, void 0, Promise, function () {
             var currentBeats, bars, randomBar, randomBeat, silenceUri, currentOnsets, randomOnset, beatPosition;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.store.findParts(this.mixDymoUri)];
@@ -1731,9 +1660,9 @@ var MixGenerator = (function () {
     };
     MixGenerator.prototype.transitionImmediatelyToRandomBars = function (songUri, numBars) {
         if (numBars === void 0) { numBars = 2; }
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
+        return __awaiter(this, void 0, Promise, function () {
             var bars, randomBar;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri)];
@@ -1747,34 +1676,73 @@ var MixGenerator = (function () {
             });
         });
     };
-    /**returns a number of controls that trigger the transition*/
-    MixGenerator.prototype.loadAndTriggerTransition = function () {
-        var _this = this;
+    /**loads the controls and constraints and adds the latter to the list*/
+    MixGenerator.prototype.loadTransition = function () {
         var uris = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             uris[_i] = arguments[_i];
         }
-        return (_a = this.manager).loadFromStore.apply(_a, uris).then(function (l) {
-            //add loaded transition
-            _this.transitions.push(l.constraintUris);
-            //return controls
-            return __WEBPACK_IMPORTED_MODULE_0_lodash__["values"](l.controls);
-        })
-            .then(function (controls) {
-            //TODO LET SCHEDULER DO THIS!!!!
-            setTimeout(function () {
-                //stop previous transition
-                if (_this.transitions.length > 1)
-                    _this.store.deactivateConstraints(_this.transitions.slice(-2)[0]);
-                //start new transition
-                controls.forEach(function (c) { return c.startUpdate ? c.startUpdate() : null; });
-            }, TRIGGER_DELAY * 1000); //arbitrary time TODO REMOVE ONCE DONE WITH EVENTS!!!
+        return __awaiter(this, void 0, Promise, function () {
+            var _a, loaded;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, (_a = this.player.getDymoManager()).loadFromStore.apply(_a, uris)];
+                    case 1:
+                        loaded = _b.sent();
+                        //TODO NOW ADD CONSTRAINT TRIGGERS
+                        return [4 /*yield*/, this.addConstraintTriggers(loaded.constraintUris)];
+                    case 2:
+                        //TODO NOW ADD CONSTRAINT TRIGGERS
+                        _b.sent();
+                        this.transitionConstraints.push(loaded.constraintUris);
+                        return [2 /*return*/];
+                }
+            });
         });
-        var _a;
+    };
+    /**removes old song until current position + offset, registers new song and gets bars*/
+    MixGenerator.prototype.initTransition = function (songUri, newOffsetBars) {
+        return __awaiter(this, void 0, Promise, function () {
+            var newSongBars, currentPos, offset, oldSongBars;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.registerSongAndGetBars(songUri, newOffsetBars)];
+                    case 1:
+                        newSongBars = _a.sent();
+                        return [4 /*yield*/, this.player.getPosition(this.mixDymoUri)];
+                    case 2:
+                        currentPos = _a.sent();
+                        offset = currentPos + TRANSITION_OFFSET;
+                        return [4 /*yield*/, this.store.removeParts(this.mixDymoUri, offset)];
+                    case 3:
+                        oldSongBars = _a.sent();
+                        return [2 /*return*/, { removedOldSongBars: oldSongBars, newSongBars: newSongBars }];
+                }
+            });
+        });
+    };
+    /**adds new song bars and returns transition object*/
+    MixGenerator.prototype.endTransition = function (newSongBars, type, duration, transitionUris) {
+        return __awaiter(this, void 0, Promise, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!__WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"]) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.loadTransition.apply(this, transitionUris)];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2: return [4 /*yield*/, this.addPartsToMix(newSongBars)];
+                    case 3:
+                        _a.sent();
+                        return [2 /*return*/, this.getTransitionObject(type, duration)];
+                }
+            });
+        });
     };
     MixGenerator.prototype.registerSongAndGetBars = function (songUri, offset) {
         if (offset === void 0) { offset = 0; }
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var bars;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -1788,8 +1756,54 @@ var MixGenerator = (function () {
             });
         });
     };
-    MixGenerator.prototype.makeCrossfade = function (rampUri, oldSongUris, newSongUris) {
+    MixGenerator.prototype.addRampWithTrigger = function (duration) {
         return __awaiter(this, void 0, void 0, function () {
+            var rampUri;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.generator.addRampControl(0, duration, 100)];
+                    case 1:
+                        rampUri = _a.sent();
+                        return [4 /*yield*/, this.addControlTrigger(rampUri)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/, rampUri];
+                }
+            });
+        });
+    };
+    MixGenerator.prototype.addControlTrigger = function (controlUri) {
+        return __awaiter(this, void 0, void 0, function () {
+            var trigger;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.store
+                            .setControlParam(controlUri, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].AUTO_CONTROL_TRIGGER, 0)];
+                    case 1:
+                        trigger = _a.sent();
+                        return [4 /*yield*/, this.generator.addEvent(this.mixDymoUri, trigger, 1)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    MixGenerator.prototype.addConstraintTriggers = function (newUris) {
+        return __awaiter(this, void 0, void 0, function () {
+            var previousConstraints;
+            return __generator(this, function (_a) {
+                if (this.transitionConstraints.length > 1) {
+                    previousConstraints = __WEBPACK_IMPORTED_MODULE_0_lodash__["last"](this.transitionConstraints);
+                    /*TODO ADD EVENT TO DEACTIVATE PREVIOUS CONSTRAINTS AND ACTIVATE NEW ONES
+                    this.store.deactivateConstraints(previousConstraints);*/
+                }
+                return [2 /*return*/];
+            });
+        });
+    };
+    MixGenerator.prototype.makeCrossfade = function (rampUri, oldSongUris, newSongUris) {
+        return __awaiter(this, void 0, Promise, function () {
             var fadeOut, fadeIn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -1816,7 +1830,7 @@ var MixGenerator = (function () {
         return this.expressionGen.addConstraint(this.mixDymoUri, vars + expression, true);
     };
     MixGenerator.prototype.getTempoFromBars = function (barUris) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var avgDuration, _a, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -1830,8 +1844,47 @@ var MixGenerator = (function () {
             });
         });
     };
-    MixGenerator.prototype.getTotalDuration = function (dymoUris) {
+    //returns an initial segment of bars with at most the given duration
+    MixGenerator.prototype.getInitialBars = function (bars, duration) {
+        return __awaiter(this, void 0, Promise, function () {
+            var currentDuration;
+            var _this = this;
+            return __generator(this, function (_a) {
+                currentDuration = 0;
+                return [2 /*return*/, __WEBPACK_IMPORTED_MODULE_0_lodash__["takeWhile"](bars, function (b, i) { return __awaiter(_this, void 0, void 0, function () {
+                        var _a;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
+                                case 0:
+                                    _a = currentDuration;
+                                    return [4 /*yield*/, this.store.findFeatureValue(b, __WEBPACK_IMPORTED_MODULE_1_dymo_core__["uris"].DURATION_FEATURE)];
+                                case 1:
+                                    currentDuration = _a + _b.sent();
+                                    return [2 /*return*/, currentDuration < duration];
+                            }
+                        });
+                    }); })];
+            });
+        });
+    };
+    /**returns the last bars*/
+    MixGenerator.prototype.findLastBar = function () {
         return __awaiter(this, void 0, void 0, function () {
+            var _a, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _b = (_a = __WEBPACK_IMPORTED_MODULE_0_lodash__).last;
+                        return [4 /*yield*/, this.store.findParts(this.mixDymoUri)];
+                    case 1: 
+                    //return (await this.store.findParts(this.mixDymoUri)).slice(-n);
+                    return [2 /*return*/, _b.apply(_a, [_c.sent()])];
+                }
+            });
+        });
+    };
+    MixGenerator.prototype.getTotalDuration = function (dymoUris) {
+        return __awaiter(this, void 0, Promise, function () {
             var _a, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -1844,12 +1897,25 @@ var MixGenerator = (function () {
         });
     };
     MixGenerator.prototype.getFeature = function (dymoUris, featureUri) {
-        return __awaiter(this, void 0, void 0, function () {
+        return __awaiter(this, void 0, Promise, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, Promise.all(dymoUris.map(function (d) { return _this.store.findFeatureValue(d, featureUri); }))];
             });
         });
+    };
+    MixGenerator.prototype.getTransitionObject = function (type, duration) {
+        return {
+            date: new Date(Date.now()),
+            user: null,
+            rating: null,
+            names: null,
+            features: null,
+            decision: null,
+            type: type,
+            parameters: null,
+            duration: duration
+        };
     };
     return MixGenerator;
 }());
@@ -1858,7 +1924,7 @@ var MixGenerator = (function () {
 
 /***/ }),
 
-/***/ "../../../../../src/app/types.ts":
+/***/ "../../../../../src/app/mix/types.ts":
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1997,6 +2063,13 @@ module.exports = __webpack_require__("../../../../../src/main.ts");
 /***/ }),
 
 /***/ 1:
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+
+/***/ 2:
 /***/ (function(module, exports) {
 
 /* (ignored) */
