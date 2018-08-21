@@ -3,6 +3,16 @@ import { DymoPlayer } from 'dymo-player';
 import { DymoGenerator, ExpressionGenerator, SuperDymoStore, uris } from 'dymo-core';
 import { Transition, TransitionType } from './types';
 
+export const AVAILABLE_TRANSITIONS = [
+  "beatmatchCrossfade",
+  "echoFreeze",
+  "slam",
+  "beatRepeat",
+  "crossfade",
+  "powerDown",
+  "effects"
+]
+
 interface MixState {
   removedOldSongBars: string[],
   newSongBars: string[]

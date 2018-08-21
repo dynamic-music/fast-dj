@@ -20,7 +20,8 @@ export interface FeatureExtractor {
 export enum DecisionType {
   Default,
   Random,
-  DecisionTree
+  DecisionTree,
+  FiftyFifty
 }
 
 export enum TransitionType {

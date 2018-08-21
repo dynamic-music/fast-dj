@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from './api.service';
 import { FeatureExtractionService } from './feature-extraction.service';
 import { getGuid } from './util';
-import { Transition } from './mix/types';
+import { Transition, DecisionType } from './mix/types';
 import { AutoDj } from './mix/auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
@@ -102,7 +102,7 @@ export class AppComponent implements OnInit  {
     })
     .subscribe();
 
-    this.dj = new AutoDj(null, this.extractionService);
+    this.dj = new AutoDj(null, this.extractionService, DecisionType.DecisionTree);
     await this.dj.init();
     this.status = 'READY';
     this.message = 'drop audio here';
