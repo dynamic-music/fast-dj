@@ -3,7 +3,6 @@ import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { Ng2FileDropModule } from 'ng2-file-drop';
 import { ApiService } from './api.service';
-import { FeatureExtractionService } from './feature-extraction.service';
 import { RouterModule, Routes } from '@angular/router';
 import { DevControlsComponent } from './dev-controls/dev-controls.component';
 import { StarRatingModule } from 'angular-star-rating';
@@ -20,8 +19,7 @@ import { StarRatingModule } from 'angular-star-rating';
     StarRatingModule.forRoot()
   ],
   providers: [
-    ApiService,
-    FeatureExtractionService
+    ApiService
   ],
   bootstrap: [AppComponent]
 })

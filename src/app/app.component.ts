@@ -1,8 +1,8 @@
+import 'rxjs/add/operator/map';
 import { Component, OnInit } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from './api.service';
-import { FeatureExtractionService } from './feature-extraction.service';
 import { getGuid } from './util';
 import { AutoDj, Transition, DecisionType } from 'auto-dj';
 
@@ -69,9 +69,7 @@ export class AppComponent implements OnInit  {
     };
   }
 
-  constructor(private route: ActivatedRoute,
-      private apiService: ApiService,
-      private extractionService: FeatureExtractionService) {
+  constructor(private route: ActivatedRoute, private apiService: ApiService) {
     //GlobalVars.LOGGING_ON = true;
     this.cyclicColours = createColourCycleIterator([
       '#5bc0eb',
@@ -101,8 +99,7 @@ export class AppComponent implements OnInit  {
     })
     .subscribe();
 
-    this.dj = new AutoDj(null, this.extractionService, DecisionType.DecisionTree);
-    await this.dj.init();
+    this.dj = new AutoDj();
     this.status = 'READY';
     this.message = 'drop audio here';
     this.dj.getBeatObservable()
