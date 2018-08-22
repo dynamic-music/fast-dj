@@ -8,7 +8,7 @@ import {
 //import { FeatureList } from 'piper-js/core';
 import { toSeconds } from 'piper-js/time';
 import createQmWorker from '@extractors/qm';
-import { FeatureExtractor, Beat, Key } from './mix/types';
+import { FeatureExtractor, Beat, Key } from 'auto-dj';
 
 // this spawns a web worker, which we only want to do once
 // so we instantiate

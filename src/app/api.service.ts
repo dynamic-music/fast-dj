@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Transition } from './mix/types';
+import { Transition } from 'auto-dj';
 
 @Injectable()
 export class ApiService {

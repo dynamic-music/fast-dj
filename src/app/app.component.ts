@@ -4,8 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from './api.service';
 import { FeatureExtractionService } from './feature-extraction.service';
 import { getGuid } from './util';
-import { Transition, DecisionType } from './mix/types';
-import { AutoDj } from './mix/auto-dj';
+import { AutoDj, Transition, DecisionType } from 'auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
   let index = 0;
