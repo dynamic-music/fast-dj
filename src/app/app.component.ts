@@ -3,8 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { Ng2FileDropAcceptedFile } from 'ng2-file-drop';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from './api.service';
-import { getGuid } from './util';
-import { AutoDj, Transition, DecisionType } from 'auto-dj';
+import { getUserGuid } from './util';
+import { AutoDj, Transition } from 'auto-dj';
 
 function* createColourCycleIterator(colours: string[]) {
   let index = 0;
@@ -31,12 +31,15 @@ interface AppState {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit  {
+
+  //accessed in html
+  protected lastTransitionRating: number = 0;
+  protected transitionDone: boolean = false;
+
   private cyclicColours: Iterator<string>;
   private currentState: AppState;
   private songNames: string[] = [];
   private lastTransition: Transition;
-  private lastTransitionRating: number = 0;
-  private transitionDone: boolean = false;
   private ratingDone: boolean = false;
   private dj: AutoDj;
 
@@ -100,17 +103,19 @@ export class AppComponent implements OnInit  {
     .subscribe();
 
     this.dj = new AutoDj();
+    await this.dj.isReady();
     this.status = 'READY';
     this.message = 'drop audio here';
     this.dj.getBeatObservable()
-      .subscribe(b => {
+      .subscribe(_ => {
         this.status = this.state.status.type === "SPINNING" ?
           "spinning" : "SPINNING";
       })
   }
 
-  private async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
-    //TODO RECATIVATE MANDATORY RATING!!! if (this.ratingDone || this.state.status.type === 'READY') {
+  //called from html
+  protected async dragFileAccepted(acceptedFile: Ng2FileDropAcceptedFile) {
+    if (this.ratingDone || this.state.status.type === 'READY') {
       this.transitionDone = false;
       this.ratingDone = false;
       this.lastTransitionRating = 0;
@@ -125,11 +130,12 @@ export class AppComponent implements OnInit  {
         this.message = "playing " + acceptedFile.file.name.toLowerCase();
       }, this.lastTransition.duration*1000 + 3000);
     }
-  //}
+  }
 
-  private onRatingChange(event) {
+  //called from html
+  protected onRatingChange(event) {
     if (this.lastTransition) {
-      this.lastTransition.user = getGuid();
+      this.lastTransition.user = getUserGuid();
       this.lastTransition.rating = event.rating;
       this.lastTransition.names = this.songNames.slice(-2);
       this.apiService.addTransition(this.lastTransition);
