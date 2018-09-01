@@ -1,6 +1,6 @@
 {
   "name": "fast-dj",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
@@ -20,9 +20,11 @@
     "@angular/platform-browser-dynamic": "^5.2.10",
     "@angular/router": "^5.2.10",
     "angular-star-rating": "^4.0.0-beta.3",
-    "auto-dj": "github:dynamic-music/auto-dj",
+    "auto-dj": "0.1.6",
     "core-js": "^2.4.1",
     "css-star-rating": "^1.2.4",
+    "ml-cart": "^1.0.8",
+    "ml-dataset-iris": "^1.0.0",
     "ng2-file-drop": "^5.0.0",
     "rxjs": "^5.5.10",
     "zone.js": "^0.8.14"
