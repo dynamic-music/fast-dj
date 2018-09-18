@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from './api.service';
 import { getUserGuid } from './util';
 import { AutoDj, Transition } from 'auto-dj';
+import { Learner } from './test-learning';
 
 function* createColourCycleIterator(colours: string[]) {
   let index = 0;
@@ -111,6 +112,14 @@ export class AppComponent implements OnInit  {
         this.status = this.state.status.type === "SPINNING" ?
           "spinning" : "SPINNING";
       })
+      /*this.dj.playDjSet([
+        'https://cdns-preview-b.dzcdn.net/stream/c-b70e81f72475ff650226b63186f67f6a-8.mp3',
+        'https://cdns-preview-5.dzcdn.net/stream/c-596f37782baf051cc621c40e95f8970d-2.mp3',
+        'https://cdns-preview-9.dzcdn.net/stream/c-980531ccb9706735665368c704a7ef72-3.mp3'
+      ], 6, false);*/
+
+    //new Learner(this.apiService).testWithStudySet();
+    //new Learner(this.apiService).testWithIris();
   }
 
   //called from html
@@ -122,7 +131,7 @@ export class AppComponent implements OnInit  {
       const url = URL.createObjectURL(acceptedFile.file);
       this.songNames.push(acceptedFile.file.name);
       this.message = ("checking out "+acceptedFile.file.name).toLowerCase();
-      this.lastTransition = await this.dj.transitionToSong(url);
+      this.lastTransition = await this.dj.transitionToTrack(url);
       this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
       //when transition done:
       setTimeout(() => {

@@ -1,25 +1,88 @@
+import * as _ from 'lodash';
+import Matrix from 'ml-matrix';
 import irisDataset from 'ml-dataset-iris';
-import {DecisionTreeClassifier as DTClassifier} from 'ml-cart';
+import { DecisionTreeClassifier as DTClassifier } from 'ml-cart';
+import { JsonTree, TransitionType } from 'auto-dj';
+import { ApiService } from './api.service';
 
-var trainingSet = irisDataset.getNumbers();
-var predictions = irisDataset.getClasses().map(
-    (elem) => irisDataset.getDistinctClasses().indexOf(elem)
-);
-console.log(trainingSet, predictions)
+interface DTClassifier {
+  root: TreeNode,
+  predict: (a:number[][])=>any
+}
 
-//trainingSet = []
+interface TreeNode {
+  splitColumn: number,
+  splitValue?: number,
+  left?: TreeNode,
+  right?: TreeNode,
+  distribution: number[][]
+}
 
-var options = {
-    gainFunction: 'gini',
-    maxDepth: 10,
-    minNumSamples: 3
-};
+export class Learner {
+  constructor(private apiService: ApiService) {}
 
-var classifier = new DTClassifier(options);
-classifier.train(trainingSet, predictions);
-var result = classifier.predict(trainingSet);
-console.log(classifier.predict(trainingSet));
-console.log(classifier)
+  async testWithStudySet() {
+    let transitions = await this.apiService.getAllTransitions();
+    //if (!transitions) transitions = DATA;
+    let data = transitions.filter(d => d.features);
+    data = data.filter(d => d.rating);
+    data = data.filter(d => new Date(d.date) < new Date(2018, 7, 15));
+    const trainingSet = new Matrix(data.map(d => d.features.map(f => Math.round(f*10)/10)));
+    const predictions = data.map(d => d.rating);
+    /*const trainingSet = [[3],[5],[3],[5]];
+    const predictions = [2,2,2,2];*/
+    console.log(trainingSet, predictions)
+    const classifier = this.getTrainedClassifier(trainingSet, predictions);
+    const tree = this.toJsonTree(classifier.root);
+    console.log(JSON.stringify(tree, null, 2));
+  }
+
+  testWithIris(): JsonTree<number> {
+    var trainingSet = irisDataset.getNumbers().slice(0,30);
+    var predictions = irisDataset.getClasses().map(
+        (elem) => irisDataset.getDistinctClasses().indexOf(elem)
+    ).slice(0,30);
+    const classifier = this.getTrainedClassifier(trainingSet, predictions);
+    const tree = this.toJsonTree(classifier.root);
+    console.log(JSON.stringify(tree, null, 2));
+    console.log(this.classify(classifier, trainingSet, predictions));
+    return tree;
+  }
+
+  private getTrainedClassifier(trainingSet: number[][], predictions: number[]): DTClassifier {
+    const classifier = new DTClassifier({
+        minNumSamples: 5
+    });
+    classifier.train(trainingSet, predictions);
+    console.log(classifier)
+    return classifier;
+  }
+
+  private classify(classifier: DTClassifier, testSet: number[][], predictions: number[]) {
+    const result = classifier.predict(testSet);
+    console.log(testSet, predictions, result)
+    console.log(_.sum(result.map((r,i) => r == predictions[i] ? 1 : 0))/result.length);
+  }
+
+  private toJsonTree(node: TreeNode): JsonTree<number> {
+    if (node) {
+      if (node.left && node.right) {
+        return {
+          col: node.splitColumn,
+          val: node.splitValue,
+          left: this.toJsonTree(node.left),
+          right: this.toJsonTree(node.right)
+        };
+      } else if (node.distribution) {
+        const d = node.distribution[0];
+        return {
+          classes: [d.indexOf(_.max(d))]
+        }
+      }
+    }
+  }
+
+}
 
 /*
 import * as classifi from 'classifi';
