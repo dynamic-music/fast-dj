@@ -284,7 +284,7 @@ var AppComponent = /** @class */ (function () {
                         this.songNames.push(acceptedFile.file.name);
                         this.message = ("checking out " + acceptedFile.file.name).toLowerCase();
                         _a = this;
-                        return [4 /*yield*/, this.dj.transitionToSong(url)];
+                        return [4 /*yield*/, this.dj.transitionToTrack(url)];
                     case 1:
                         _a.lastTransition = _b.sent();
                         this.message = "transitioning to " + acceptedFile.file.name.toLowerCase();
